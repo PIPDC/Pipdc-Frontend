@@ -8,7 +8,7 @@ import { Input, Textarea } from '../ui/Input';
 import { ImageUpload } from '../ui/ImageUpload';
 import { useCreateAgent, useUpdateAgent } from '../../hooks/mutations';
 import { useToast } from '../ui/Toast';
-import { extractApiError } from '../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../services/api';
 import type { Agent } from '../../types';
 import type { UploadResult } from '../../services/imageService';
 
@@ -124,7 +124,11 @@ export function AgentForm({ open, agent, onClose }: AgentFormProps) {
       }
       onClose();
     } catch (err) {
-      notify({ type: 'error', title: 'Could not save agent', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This agent just changed' : 'Could not save agent',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 

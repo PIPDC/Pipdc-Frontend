@@ -9,7 +9,7 @@ import { ImageUpload } from '../ui/ImageUpload';
 import { useCreateProperty, useUpdateProperty, useCreateLocation } from '../../hooks/mutations';
 import { useLocations } from '../../hooks/queries';
 import { useToast } from '../ui/Toast';
-import { extractApiError } from '../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { propertyStatusLabel } from '../../utils/propertyStatus';
 import type { Property, PropertyType } from '../../types';
@@ -279,7 +279,11 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
       }
       onClose();
     } catch (err) {
-      notify({ type: 'error', title: 'Could not save property', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This property just changed' : 'Could not save property',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 

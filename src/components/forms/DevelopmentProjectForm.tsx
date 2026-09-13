@@ -9,7 +9,7 @@ import { ImageUpload } from '../ui/ImageUpload';
 import { useCreateDevelopmentProject, useUpdateDevelopmentProject, useCreateLocation } from '../../hooks/mutations';
 import { useLocations } from '../../hooks/queries';
 import { useToast } from '../ui/Toast';
-import { extractApiError } from '../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../services/api';
 import { DEVELOPMENT_PROJECT_STATUS_OPTIONS, developmentStatusLabel } from '../../utils/developmentStatus';
 import type { DevelopmentProject } from '../../types/development';
 import type { UploadResult } from '../../services/imageService';
@@ -187,7 +187,11 @@ export function DevelopmentProjectForm({ open, project, onClose }: DevelopmentPr
       }
       onClose();
     } catch (err) {
-      notify({ type: 'error', title: 'Could not save project', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This project just changed' : 'Could not save project',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 

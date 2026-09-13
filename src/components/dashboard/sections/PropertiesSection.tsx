@@ -14,7 +14,7 @@ import {
 import { useProperties, useAgents, useMyAgent } from '../../../hooks/queries';
 import { useAuth } from '../../../contexts/AuthContext';
 import { formatPrice, timeAgo } from '../../../utils/format';
-import { extractApiError } from '../../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../../services/api';
 import { useToast } from '../../ui/Toast';
 import { primaryRole } from '../../../utils/roles';
 import { cn } from '../../../utils/cn';
@@ -99,7 +99,11 @@ export function PropertiesSection() {
           : `"${p.title}" will now appear on the home page.`,
       });
     } catch (err) {
-      notify({ type: 'error', title: 'Could not update featured', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This property just changed' : 'Could not update featured',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     } finally {
       setTogglingId(null);
     }
@@ -111,7 +115,11 @@ export function PropertiesSection() {
       await changeStatus.mutateAsync({ id: p.id, status: newStatus });
       notify({ type: 'success', title: 'Status updated', description: `"${p.title}" is now ${propertyStatusLabel(newStatus as any)}.` });
     } catch (err) {
-      notify({ type: 'error', title: 'Could not update status', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This property just changed' : 'Could not update status',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 
@@ -123,7 +131,11 @@ export function PropertiesSection() {
       const agentName = val ? agents.find((a) => a.id === val)?.fullName ?? 'agent' : 'nobody';
       notify({ type: 'success', title: 'Agent reassigned', description: `"${p.title}" assigned to ${agentName}.` });
     } catch (err) {
-      notify({ type: 'error', title: 'Could not reassign agent', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This property just changed' : 'Could not reassign agent',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 

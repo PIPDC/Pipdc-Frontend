@@ -8,6 +8,7 @@ import { messageService } from '../services/messageService';
 import { propertyService } from '../services/propertyService';
 import { developmentService } from '../services/developmentService';
 import { userService } from '../services/userService';
+import { isConcurrencyConflict } from '../services/api';
 import { queryKeys } from './queries';
 
 function useInvalidate(prefixes: string[][]) {
@@ -19,6 +20,17 @@ function useInvalidate(prefixes: string[][]) {
   };
 }
 
+function useRefetchOnConflict(prefixes: string[][]) {
+  const queryClient = useQueryClient();
+  return (error: unknown) => {
+    if (isConcurrencyConflict(error)) {
+      prefixes.forEach((prefix) => {
+        void queryClient.invalidateQueries({ queryKey: prefix });
+      });
+    }
+  };
+}
+
 export function useCreateProperty() {
   const invalidate = useInvalidate([['properties'], ['agents'], ['dashboard']]);
   return useMutation({ mutationFn: (payload: Record<string, unknown>) => propertyService.create(payload), onSuccess: invalidate });
@@ -26,17 +38,21 @@ export function useCreateProperty() {
 
 export function useUpdateProperty() {
   const invalidate = useInvalidate([['properties'], ['agents'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['properties'], ['agents'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => propertyService.update(id, payload),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
 export function useSetFeatured() {
   const invalidate = useInvalidate([['properties'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['properties'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, featured }: { id: number; featured: boolean }) => propertyService.setFeatured(id, featured),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
@@ -47,25 +63,31 @@ export function useDeleteProperty() {
 
 export function useChangePropertyStatus() {
   const invalidate = useInvalidate([['properties'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['properties'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => propertyService.changeStatus(id, status),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
 export function useChangePropertyListingType() {
   const invalidate = useInvalidate([['properties'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['properties'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, listingType }: { id: number; listingType: string }) => propertyService.changeListingType(id, listingType),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
 export function useAssignPropertyAgent() {
   const invalidate = useInvalidate([['properties'], ['agents'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['properties'], ['agents'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, agentId }: { id: number; agentId: number | null }) => propertyService.assignAgent(id, agentId),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
@@ -76,9 +98,11 @@ export function useCreateAgent() {
 
 export function useUpdateAgent() {
   const invalidate = useInvalidate([['agents'], ['users'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['agents'], ['users'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => agentService.update(id, payload),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
@@ -89,10 +113,12 @@ export function useDeleteAgent() {
 
 export function useUpdateEnquiry() {
   const invalidate = useInvalidate([['enquiries'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['enquiries'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: { fullName: string; email: string; phone?: string | null; message: string; status: string } }) =>
       enquiryService.update(id, payload),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
@@ -194,9 +220,11 @@ export function useActivateUser() {
 
 export function useToggleAgentVerification() {
   const invalidate = useInvalidate([['agents'], ['users'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['agents'], ['users'], ['dashboard']]);
   return useMutation({
     mutationFn: (id: number) => agentService.toggleVerification(id),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
@@ -279,17 +307,21 @@ export function useCreateDevelopmentProject() {
 
 export function useUpdateDevelopmentProject() {
   const invalidate = useInvalidate([['development-projects'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['development-projects'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => developmentService.update(id, payload),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 
 export function useSetDevelopmentFeatured() {
   const invalidate = useInvalidate([['development-projects'], ['dashboard']]);
+  const refetchOnConflict = useRefetchOnConflict([['development-projects'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, featured }: { id: number; featured: boolean }) => developmentService.setFeatured(id, featured),
     onSuccess: invalidate,
+    onError: refetchOnConflict,
   });
 }
 

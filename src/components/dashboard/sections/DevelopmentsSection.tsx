@@ -9,7 +9,7 @@ import { useDeleteDevelopmentProject, useSetDevelopmentFeatured } from '../../..
 import { useAdminDevelopmentProjects } from '../../../hooks/queries';
 import { useToast } from '../../ui/Toast';
 import { timeAgo } from '../../../utils/format';
-import { extractApiError } from '../../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../../services/api';
 import { cn } from '../../../utils/cn';
 import { developmentStatusTone, developmentStatusLabel } from '../../../utils/developmentStatus';
 import { CardTable, RowActions, LoadingRows, TableEmpty, thClass, tdClass, SectionFooter } from './shared';
@@ -74,7 +74,11 @@ export function DevelopmentsSection() {
           : `"${p.name}" will now appear on the home page.`,
       });
     } catch (err) {
-      notify({ type: 'error', title: 'Could not update featured', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This project just changed' : 'Could not update featured',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     } finally {
       setTogglingId(null);
     }
