@@ -10,6 +10,7 @@ import { propertyService } from '../services/propertyService';
 import { savedPropertyService, type SavedPropertyFilters } from '../services/savedPropertyService';
 import { userService, type UserFilters } from '../services/userService';
 import { developmentService } from '../services/developmentService';
+import { aiChatService } from '../services/aiChatService';
 import { useAuth } from '../contexts/AuthContext';
 import { primaryRole } from '../utils/roles';
 import type { PropertyFilters } from '../types';
@@ -55,6 +56,7 @@ export const queryKeys = {
   adminDevelopmentTracking: (filters?: DevelopmentTrackingFilters) => ['admin-development-tracking', filters] as const,
   locations: (params?: LocationListParams) => ['locations', params] as const,
   locationHierarchy: ['locations', 'hierarchy'] as const,
+  aiSession: ['ai-chat', 'session'] as const,
 };
 
 export function useFeaturedProperties() {
@@ -349,5 +351,13 @@ export function useLocationHierarchy() {
   return useQuery({
     queryKey: queryKeys.locationHierarchy,
     queryFn: locationService.getHierarchy,
+  });
+}
+
+export function useAiSession() {
+  return useQuery({
+    queryKey: queryKeys.aiSession,
+    queryFn: aiChatService.getSession,
+    retry: false,
   });
 }

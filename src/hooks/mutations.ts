@@ -8,6 +8,7 @@ import { messageService } from '../services/messageService';
 import { propertyService } from '../services/propertyService';
 import { developmentService } from '../services/developmentService';
 import { userService } from '../services/userService';
+import { aiChatService } from '../services/aiChatService';
 import { isConcurrencyConflict } from '../services/api';
 import { queryKeys } from './queries';
 
@@ -426,4 +427,24 @@ export function useCreateLocation() {
 export function useDeleteLocation() {
   const invalidate = useInvalidate([['locations'], ['properties'], ['development-projects']]);
   return useMutation({ mutationFn: (id: number) => locationService.remove(id), onSuccess: invalidate });
+}
+
+export function useSendAiMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (content: string) => aiChatService.sendMessage(content),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.aiSession, data.session);
+    },
+  });
+}
+
+export function useClearAiSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => aiChatService.clearSession(),
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.aiSession, null);
+    },
+  });
 }
