@@ -356,3 +356,22 @@ export interface ApiErrorBody {
   detail?: string;
   status?: number;
 }
+
+export interface AiChatMessage {
+  role: 'user' | 'model';
+  content: string;
+  sentAt: string;
+  properties: Property[] | null;
+}
+
+export interface AiChatSession {
+  id: number;
+  title: string | null;
+  lastMessageAt: string;
+  messages: AiChatMessage[];
+}
+
+export interface SendAiMessageResponse {
+  session: AiChatSession;
+  assistantMessage: AiChatMessage;
+}
