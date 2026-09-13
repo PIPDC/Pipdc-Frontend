@@ -113,6 +113,15 @@ export function extractApiErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
+export const CONCURRENCY_CONFLICT_CODE = 'concurrency.conflict';
+
+export function isConcurrencyConflict(error: unknown): boolean {
+  return extractApiErrorCode(error) === CONCURRENCY_CONFLICT_CODE;
+}
+
+export const CONCURRENCY_CONFLICT_DESCRIPTION =
+  'This item was changed by someone else. The latest version has been reloaded — please re-apply your changes and try again.';
+
 export function isApiConfigured(): boolean {
   return Boolean(import.meta.env.VITE_API_URL);
 }

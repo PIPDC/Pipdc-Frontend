@@ -7,7 +7,7 @@ import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { AgentForm } from '../../forms/AgentForm';
 import { useDeleteAgent, useToggleAgentVerification } from '../../../hooks/mutations';
 import { useAgents, useAgentSummary } from '../../../hooks/queries';
-import { extractApiError } from '../../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../../services/api';
 import { useToast } from '../../ui/Toast';
 import { CardTable, RowActions, LoadingRows, TableEmpty, thClass, tdClass, SectionFooter } from './shared';
 import type { Agent } from '../../../types';
@@ -56,7 +56,11 @@ export function AgentsSection() {
       });
       setVerifying(null);
     } catch (err) {
-      notify({ type: 'error', title: 'Could not update verification', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This agent just changed' : 'Could not update verification',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 

@@ -10,7 +10,7 @@ import { useUpdateEnquiry, useDeleteEnquiry } from '../../../hooks/mutations';
 import { useEnquiries } from '../../../hooks/queries';
 import { enquiryService } from '../../../services/enquiryService';
 import { formatDate, timeAgo } from '../../../utils/format';
-import { extractApiError } from '../../../services/api';
+import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../../services/api';
 import { useToast } from '../../ui/Toast';
 import { cn } from '../../../utils/cn';
 import { ENQUIRY_STATUS_OPTIONS, enquiryStatusLabel, enquiryStatusTone } from '../../../utils/enquiryStatus';
@@ -60,7 +60,11 @@ export function AgentEnquiriesSection({ title }: { title: string }) {
       });
       notify({ type: 'success', title: 'Status updated', description: `${e.fullName}'s enquiry is now ${enquiryStatusLabel(status)}.` });
     } catch (err) {
-      notify({ type: 'error', title: 'Could not update status', description: extractApiError(err) });
+      notify({
+        type: 'error',
+        title: isConcurrencyConflict(err) ? 'This enquiry just changed' : 'Could not update status',
+        description: isConcurrencyConflict(err) ? CONCURRENCY_CONFLICT_DESCRIPTION : extractApiError(err),
+      });
     }
   };
 
