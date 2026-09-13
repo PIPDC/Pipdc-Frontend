@@ -6,12 +6,16 @@ export const messageService = {
     const { data } = await api.get<Message[]>(`/conversations/${conversationId}/messages`);
     return data;
   },
-  async send(conversationId: number, content: string): Promise<Message> {
-    const { data } = await api.post<Message>(`/conversations/${conversationId}/messages`, { content });
+  async send(conversationId: number, content: string, idempotencyKey?: string): Promise<Message> {
+    const { data } = await api.post<Message>(`/conversations/${conversationId}/messages`, { content }, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    });
     return data;
   },
-  async sendByEnquiry(enquiryId: number, content: string): Promise<FirstMessageResult> {
-    const { data } = await api.post<FirstMessageResult>(`/enquiries/${enquiryId}/messages`, { content });
+  async sendByEnquiry(enquiryId: number, content: string, idempotencyKey?: string): Promise<FirstMessageResult> {
+    const { data } = await api.post<FirstMessageResult>(`/enquiries/${enquiryId}/messages`, { content }, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    });
     return data;
   },
   async markRead(conversationId: number): Promise<void> {

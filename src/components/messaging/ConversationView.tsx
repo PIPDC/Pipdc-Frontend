@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Eye } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -17,13 +18,17 @@ interface ConversationViewProps {
 export function ConversationView({ conversation, currentUserId, canSend, onBack }: ConversationViewProps) {
   const messagesQuery = useMessages(conversation.id);
   const sendMessage = useSendMessage();
+  // One idempotency key per send intent: reused on failure/retry so a lost response
+  // is replayed instead of delivering a duplicate message, and only rotated on success.
+  const pendingKeyRef = useRef(crypto.randomUUID());
 
   const isClientViewer = conversation.client.userId === currentUserId;
   const otherName = isClientViewer ? conversation.agent.fullName : conversation.client.fullName;
   const otherMeta = isClientViewer ? conversation.agent.agencyName : conversation.client.email;
 
   const handleSend = async (content: string) => {
-    await sendMessage.mutateAsync({ conversationId: conversation.id, content });
+    await sendMessage.mutateAsync({ conversationId: conversation.id, content, idempotencyKey: pendingKeyRef.current });
+    pendingKeyRef.current = crypto.randomUUID();
   };
 
   const backButton = onBack ? (

@@ -222,7 +222,7 @@ export function useVerifyEmail() {
 
 export function useResendVerification() {
   return useMutation({
-    mutationFn: (email: string) => authService.resendVerification(email),
+    mutationFn: ({ email, idempotencyKey }: { email: string; idempotencyKey: string }) => authService.resendVerification(email, idempotencyKey),
   });
 }
 
@@ -236,7 +236,7 @@ export function useResetPassword() {
 export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ conversationId, content }: { conversationId: number; content: string }) => messageService.send(conversationId, content),
+    mutationFn: ({ conversationId, content, idempotencyKey }: { conversationId: number; content: string; idempotencyKey: string }) => messageService.send(conversationId, content, idempotencyKey),
     onSuccess: (_data, { conversationId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.messages(conversationId) });
@@ -247,7 +247,7 @@ export function useSendMessage() {
 export function useSendFirstMessage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ enquiryId, content }: { enquiryId: number; content: string }) => messageService.sendByEnquiry(enquiryId, content),
+    mutationFn: ({ enquiryId, content, idempotencyKey }: { enquiryId: number; content: string; idempotencyKey: string }) => messageService.sendByEnquiry(enquiryId, content, idempotencyKey),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.conversation(data.conversation.id) });

@@ -11,10 +11,10 @@ const getStateByEnquiry = async (enquiryId: number): Promise<EnquiryConversation
 
 // Resolves (or creates, for a first-time lead) the client's Enquiry for a property.
 // This never creates a Conversation: conversations only exist after the first message.
-const resolveEnquiryForProperty = async (propertyId: number): Promise<Enquiry> => {
+const resolveEnquiryForProperty = async (propertyId: number, idempotencyKey?: string): Promise<Enquiry> => {
   const existing = await enquiryService.mineByProperty(propertyId);
   if (existing) return existing;
-  return enquiryService.create({ message: DEFAULT_PROPERTY_ENQUIRY_MESSAGE, propertyId });
+  return enquiryService.create({ message: DEFAULT_PROPERTY_ENQUIRY_MESSAGE, propertyId }, idempotencyKey);
 };
 
 export const conversationService = {

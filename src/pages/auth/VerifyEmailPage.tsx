@@ -56,7 +56,7 @@ export function VerifyEmailPage() {
   const onResend = async () => {
     setServerError(null);
     try {
-      await resend.mutateAsync(email);
+      await resend.mutateAsync({ email, idempotencyKey: crypto.randomUUID() });
       setSecondsLeft(RESEND_COOLDOWN_SECONDS);
       notify({ type: 'info', title: 'Code sent', description: 'A new verification code is on its way to your inbox.' });
     } catch (err) {
