@@ -74,7 +74,7 @@ export function MessagingSection() {
     attemptedProperty.current = propertyId;
     setResolvingProperty(true);
     conversationService
-      .resolveEnquiryForProperty(propertyId)
+      .resolveEnquiryForProperty(propertyId, crypto.randomUUID())
       .then((enquiry) => setSearchParams({ enquiry: String(enquiry.id) }, { replace: true }))
       .catch((err) => {
         notify({ type: 'error', title: 'Could not open conversation', description: extractApiError(err) });

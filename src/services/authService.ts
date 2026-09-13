@@ -20,7 +20,11 @@ export interface TurnstileVerification {
 
 function turnstileHeaders(t?: TurnstileVerification): Record<string, string> | undefined {
   return t?.token
-    ? { 'X-Turnstile-Token': t.token, 'X-Turnstile-Idempotency-Key': t.idempotencyKey }
+    ? {
+        'X-Turnstile-Token': t.token,
+        'X-Turnstile-Idempotency-Key': t.idempotencyKey,
+        'Idempotency-Key': t.idempotencyKey,
+      }
     : undefined;
 }
 
@@ -49,8 +53,8 @@ export const authService = {
   async verifyEmail(payload: { email: string; code: string }): Promise<void> {
     await api.post('/auth/verify-email', payload);
   },
-  async resendVerification(email: string): Promise<void> {
-    await api.post('/auth/resend-verification', { email });
+  async resendVerification(email: string, idempotencyKey: string = crypto.randomUUID()): Promise<void> {
+    await api.post('/auth/resend-verification', { email }, { headers: { 'Idempotency-Key': idempotencyKey } });
   },
   async resetPassword(payload: { email: string; code: string; newPassword: string }): Promise<void> {
     await api.post('/auth/reset-password', payload);

@@ -38,7 +38,7 @@ export function SavedSection() {
   const handleEnquire = async (propertyId: number) => {
     setEnquiringId(propertyId);
     try {
-      const enquiry = await conversationService.resolveEnquiryForProperty(propertyId);
+      const enquiry = await conversationService.resolveEnquiryForProperty(propertyId, crypto.randomUUID());
       navigate(`/dashboard/messages?enquiry=${enquiry.id}`);
     } catch (err) {
       notify({ type: 'error', title: 'Could not start conversation', description: extractApiError(err) });

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Eye, UserX } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -28,6 +29,7 @@ export function NewConversationView({
   onBack,
 }: NewConversationViewProps) {
   const sendFirstMessage = useSendFirstMessage();
+  const pendingKeyRef = useRef(crypto.randomUUID());
 
   const isClientViewer = Boolean(client.userId) && currentUserId === client.userId;
   const otherName = isClientViewer ? agent.fullName : client.fullName;
@@ -36,7 +38,8 @@ export function NewConversationView({
   const composeDisabled = !canSend || !conversationPossible;
 
   const handleSend = async (content: string) => {
-    const result = await sendFirstMessage.mutateAsync({ enquiryId, content });
+    const result = await sendFirstMessage.mutateAsync({ enquiryId, content, idempotencyKey: pendingKeyRef.current });
+    pendingKeyRef.current = crypto.randomUUID();
     onSent(result.conversation);
   };
 

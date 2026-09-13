@@ -15,8 +15,10 @@ export interface EnquiryFilters {
 }
 
 export const enquiryService = {
-  async create(payload: CreateEnquiryPayload): Promise<Enquiry> {
-    const { data } = await api.post<Enquiry>('/enquiries', payload);
+  async create(payload: CreateEnquiryPayload, idempotencyKey?: string): Promise<Enquiry> {
+    const { data } = await api.post<Enquiry>('/enquiries', payload, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    });
     return data;
   },
   async list(params?: EnquiryFilters): Promise<Paginated<Enquiry>> {
