@@ -1,13 +1,11 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { AiChatPanel } from './AiChatPanel';
-import { useAuth } from '../../contexts/AuthContext';
 
 export function AiConciergeDrawer() {
-  const { isAuthenticated } = useAuth();
-  const location = useLocation();
+    const location = useLocation();
   const [open, setOpen] = useState(false);
 
   const hiddenRoute =
@@ -15,7 +13,7 @@ export function AiConciergeDrawer() {
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/register');
 
-  if (!isAuthenticated || hiddenRoute) return null;
+  if (hiddenRoute) return null;
 
   return (
     <>
