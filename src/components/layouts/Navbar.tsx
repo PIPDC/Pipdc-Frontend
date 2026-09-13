@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Building2, MessagesSquare, ChevronDown } from 'lucide-react';
+import { Menu, X, Building2, MessagesSquare, Sparkles, ChevronDown } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -156,6 +156,11 @@ export function Navbar() {
             <div className="h-10 w-28 animate-pulse rounded-xl bg-ink-100" />
           ) : isAuthenticated ? (
             <>
+              <Link to="/assistant">
+                <Button variant="outline" size="lg" leftIcon={<Sparkles className="h-4 w-4" />}>
+                  Assistant
+                </Button>
+              </Link>
               <Link to="/dashboard/messages">
                 <Button variant="outline" size="lg" leftIcon={<MessagesSquare className="h-4 w-4" />}>
                   Messages
@@ -265,6 +270,16 @@ export function Navbar() {
                   <div className="h-11 animate-pulse rounded-xl bg-ink-100" />
                 ) : isAuthenticated ? (
                   <>
+                    <Link to="/assistant" className="inline-flex" onClick={() => setMobileOpen(false)}>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full"
+                        leftIcon={<Sparkles className="h-4 w-4" />}
+                      >
+                        Assistant
+                      </Button>
+                    </Link>
                     <Link to="/dashboard/messages" className="inline-flex" onClick={() => setMobileOpen(false)}>
                       <Button variant="outline" size="lg" className="w-full" leftIcon={<MessagesSquare className="h-4 w-4" />}>
                         Messages

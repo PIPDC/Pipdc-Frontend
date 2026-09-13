@@ -12,6 +12,7 @@ import { RedirectIfAuthenticated } from './components/routing/RedirectIfAuthenti
 import { AdminGuard } from './components/routing/AdminGuard';
 import { StaffGuard } from './components/routing/StaffGuard';
 import { HomePage } from './pages/home/HomePage';
+import { AiAssistantPage } from './pages/AiAssistantPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { PropertyDetailsPage } from './pages/PropertyDetailsPage';
 import { AgentsPage } from './pages/AgentsPage';
@@ -72,6 +73,14 @@ const router = createBrowserRouter([
       { path: '/verify-email', element: <VerifyEmailPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
     ],
+  },
+  {
+    element: (
+      <RequireAuth>
+        <PublicLayout />
+      </RequireAuth>
+    ),
+    children: [{ path: '/assistant', element: <AiAssistantPage /> }],
   },
   {
     path: '/dashboard',
