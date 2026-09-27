@@ -69,7 +69,7 @@ export function SearchFilter({ filters, onChange, onSearch, compact }: SearchFil
   };
 
   return (
-    <div className={compact ? 'grid gap-3' : 'grid gap-3 md:grid-cols-2 lg:grid-cols-7'}>
+      <div className={compact ? 'mx-auto grid w-full max-w-3xl gap-3 lg:grid-cols-8' : 'grid gap-3 md:grid-cols-2 lg:grid-cols-8'}>
       <div className="lg:col-span-1">
         <Select
           aria-label="State"
@@ -157,8 +157,8 @@ export function SearchFilter({ filters, onChange, onSearch, compact }: SearchFil
           <option value={500000000}>Up to ₦500M</option>
         </Select>
       </div>
-      <div className="lg:col-span-1">
-        <Button onClick={handleSearch} size="lg" className="w-full" leftIcon={<Search className="h-4 w-4" />}>
+      <div className="lg:col-span-1 lg:justify-self-center">
+        <Button onClick={handleSearch} size="lg" className="w-full lg:w-auto" leftIcon={<Search className="h-4 w-4" />}>
           Search
         </Button>
       </div>
