@@ -16,7 +16,7 @@ export const tokenStore = {
   hasSession: () => Boolean(localStorage.getItem(ACCESS_KEY)) && Boolean(localStorage.getItem(REFRESH_KEY)),
 };
 
-export const baseURL = import.meta.env.VITE_API_URL ?? '/api';
+export const baseURL = import.meta.env.VITE_API_URL ?? '/api/v1';
 
 export const api: AxiosInstance = axios.create({
   baseURL,

@@ -6,7 +6,7 @@ import { baseURL, tokenStore } from '../services/api';
 const HUB_PATH = '/hubs/messaging';
 
 // The backend maps the messaging hub at the origin root, outside the /api route prefix.
-const HUB_URL = `${baseURL.replace(/\/api\/?$/, '')}${HUB_PATH}`;
+const HUB_URL = `${baseURL.replace(/\/api(\/v\d+)?\/?$/, '')}${HUB_PATH}`;
 
 interface RealtimeContextValue {
   connection: HubConnection | null;
