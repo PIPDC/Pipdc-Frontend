@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bot, MapPin, Send, Sparkles, Trash2, User } from 'lucide-react';
-import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 import { useAiSession } from '../../hooks/queries';
 import { useSendAiMessage, useClearAiSession } from '../../hooks/mutations';
 import { extractApiError } from '../../services/api';
+import { formatPrice } from '../../utils/format';
 import { cn } from '../../utils/cn';
 import type { AiChatMessage, Property } from '../../types';
 
@@ -82,29 +82,47 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
   return (
     <div className="flex max-h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-4 py-3">
+      <div className="flex shrink-0 items-center justify-between bg-forest-500 px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-forest-500 text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-forest-600">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <p className="font-display text-sm font-semibold text-ink-900">PIPDC Concierge</p>
-            <p className="text-[11px] text-ink-500">Live property recommendations</p>
+            <p className="font-display text-sm font-semibold text-white">PIPDC Concierge</p>
+            <p className="text-[11px] text-white/80">Live property recommendations</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           {hasMessages && (
-            <Button variant="ghost" size="sm" leftIcon={<Trash2 className="h-3.5 w-3.5" />} onClick={handleClear} loading={clearMutation.isPending}>
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={clearMutation.isPending}
+              className="flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-white/90 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-60"
+            >
+              {clearMutation.isPending ? (
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
               Clear
-            </Button>
+            </button>
           )}
           {embedded && onClose && (
-            <Button variant="ghost" size="icon" aria-label="Close concierge" onClick={onClose}>
+            <button
+              type="button"
+              aria-label="Close concierge"
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
-            </Button>
+            </button>
           )}
         </div>
       </div>
@@ -117,13 +135,13 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
               Ask for property recommendations by location and budget — for example: “Find me a 2-bedroom
               apartment to rent in Jos under ₦150,000 a year.”
             </p>
-            <div className="mx-auto mt-3 flex max-w-sm flex-col gap-2">
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
               {suggestions.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => handleSend(s)}
-                  className="rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-left text-xs text-ink-700 transition-colors hover:border-forest-500 hover:text-forest-600"
+                  className="rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs text-ink-700 transition-colors hover:border-forest-500 hover:bg-forest-50 hover:text-forest-600"
                 >
                   {s}
                 </button>
@@ -163,11 +181,23 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about location, budget, bedrooms…"
             maxLength={2000}
-            className="h-11 flex-1 rounded-xl border border-ink-200 bg-white px-4 text-sm text-ink-800 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-2 focus:ring-forest-500/20"
+            className="h-11 flex-1 rounded-full border border-ink-200 bg-white px-4 text-sm text-ink-800 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-2 focus:ring-forest-500/20"
           />
-          <Button type="submit" size="icon" variant="primary" loading={sendMutation.isPending} aria-label="Send message">
-            <Send className="h-4 w-4" />
-          </Button>
+          <button
+            type="submit"
+            disabled={sendMutation.isPending}
+            aria-label="Send message"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-forest-500 text-white transition-colors hover:bg-forest-600 disabled:opacity-60"
+          >
+            {sendMutation.isPending ? (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </button>
         </div>
       </form>
     </div>
