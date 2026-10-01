@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { authService, type TurnstileVerification } from '../../services/authService';
 import { extractApiError } from '../../services/api';
 import { TurnstileWidget } from '../../components/TurnstileWidget';
+import { turnstileEnabled } from '../../lib/turnstile';
 import { isInternalPath } from '../../utils/navigation';
 
 const schema = z.object({
@@ -30,6 +31,12 @@ export function RegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [turnstile, setTurnstile] = useState<TurnstileVerification | null>(null);
   const [turnstileReset, setTurnstileReset] = useState(0);
+  // When Turnstile is off there is no widget and no token, so the form must not
+  // wait for one. Keep in sync with the backend's Turnstile:Enabled flag.
+  const turnstileRequired = turnstileEnabled;
+  // Owned here rather than derived from the Turnstile widget, which is disabled.
+  // Stable across retries of the same submission; rotated only on failure.
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     resolver: zodResolver(schema),
   });
@@ -49,6 +56,7 @@ export function RegisterPage() {
           email: data.email,
           password: data.password,
         },
+        idempotencyKey,
         turnstile ?? undefined,
       );
       notify({
@@ -63,6 +71,9 @@ export function RegisterPage() {
       setServerError(extractApiError(err));
       setTurnstile(null);
       setTurnstileReset((n) => n + 1);
+      // The reservation is released on failure, so a corrected retry must use a
+      // fresh key rather than replaying the failed one.
+      setIdempotencyKey(crypto.randomUUID());
     }
   };
 
@@ -116,7 +127,7 @@ export function RegisterPage() {
 
         <TurnstileWidget onVerification={setTurnstile} resetKey={turnstileReset} />
 
-        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} disabled={!turnstile?.token} rightIcon={<ArrowRight className="h-4 w-4" />}>
+        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} disabled={turnstileRequired && !turnstile?.token} rightIcon={<ArrowRight className="h-4 w-4" />}>
           Create account
         </Button>
       </form>
