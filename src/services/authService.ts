@@ -18,14 +18,28 @@ export interface TurnstileVerification {
   idempotencyKey: string;
 }
 
-function turnstileHeaders(t?: TurnstileVerification): Record<string, string> | undefined {
-  return t?.token
-    ? {
-        'X-Turnstile-Token': t.token,
-        'X-Turnstile-Idempotency-Key': t.idempotencyKey,
-        'Idempotency-Key': t.idempotencyKey,
-      }
-    : undefined;
+/**
+ * Builds the headers for a side-effecting auth POST.
+ *
+ * The idempotency key is independent of Turnstile. It used to be bundled with
+ * the Turnstile headers, so disabling the challenge also silently dropped the
+ * key and every register/forgot-password call failed with
+ * `idempotency.missingkey`. The caller owns the key and must reuse it for
+ * retries of the same logical operation, regenerating it only after a failure
+ * or a corrected submission.
+ */
+function authPostHeaders(
+  idempotencyKey: string,
+  turnstile?: TurnstileVerification,
+): Record<string, string> {
+  const headers: Record<string, string> = { 'Idempotency-Key': idempotencyKey };
+
+  if (turnstile?.token) {
+    headers['X-Turnstile-Token'] = turnstile.token;
+    headers['X-Turnstile-Idempotency-Key'] = turnstile.idempotencyKey;
+  }
+
+  return headers;
 }
 
 export const authService = {
@@ -33,8 +47,12 @@ export const authService = {
     const { data } = await api.post<AuthResponse>('/auth/login', payload);
     return data;
   },
-  async register(payload: RegisterPayload, turnstile?: TurnstileVerification): Promise<void> {
-    await api.post('/auth/register', payload, { headers: turnstileHeaders(turnstile) });
+  async register(
+    payload: RegisterPayload,
+    idempotencyKey: string,
+    turnstile?: TurnstileVerification,
+  ): Promise<void> {
+    await api.post('/auth/register', payload, { headers: authPostHeaders(idempotencyKey, turnstile) });
   },
   async refresh(refreshToken: string): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>('/auth/refresh', { refreshToken });
@@ -47,8 +65,12 @@ export const authService = {
       // Best-effort revoke.
     }
   },
-  async forgotPassword(email: string, turnstile?: TurnstileVerification): Promise<void> {
-    await api.post('/auth/forgot-password', { email }, { headers: turnstileHeaders(turnstile) });
+  async forgotPassword(
+    email: string,
+    idempotencyKey: string,
+    turnstile?: TurnstileVerification,
+  ): Promise<void> {
+    await api.post('/auth/forgot-password', { email }, { headers: authPostHeaders(idempotencyKey, turnstile) });
   },
   async verifyEmail(payload: { email: string; code: string }): Promise<void> {
     await api.post('/auth/verify-email', payload);

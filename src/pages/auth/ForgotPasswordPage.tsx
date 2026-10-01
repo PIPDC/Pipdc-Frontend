@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { authService, type TurnstileVerification } from '../../services/authService';
 import { extractApiError } from '../../services/api';
 import { TurnstileWidget } from '../../components/TurnstileWidget';
+import { turnstileEnabled } from '../../lib/turnstile';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -23,6 +24,11 @@ export function ForgotPasswordPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [turnstile, setTurnstile] = useState<TurnstileVerification | null>(null);
   const [turnstileReset, setTurnstileReset] = useState(0);
+  // See RegisterPage: no widget and no token when Turnstile is off, so the form
+  // must not wait for one. Keep in sync with the backend's Turnstile:Enabled flag.
+  const turnstileRequired = turnstileEnabled;
+  // See RegisterPage: the key is owned here, not derived from the widget.
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotForm>({
     resolver: zodResolver(schema),
   });
@@ -30,13 +36,16 @@ export function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotForm) => {
     setServerError(null);
     try {
-      await authService.forgotPassword(data.email, turnstile ?? undefined);
+      await authService.forgotPassword(data.email, idempotencyKey, turnstile ?? undefined);
       notify({ type: 'info', title: 'Code sent', description: 'Check your inbox for a 6-digit code.' });
       navigate(`/reset-password?email=${encodeURIComponent(data.email)}`);
     } catch (err) {
       setServerError(extractApiError(err));
       setTurnstile(null);
       setTurnstileReset((n) => n + 1);
+      // The reservation is released on failure, so a corrected retry must use a
+      // fresh key rather than replaying the failed one.
+      setIdempotencyKey(crypto.randomUUID());
     }
   };
 
@@ -63,7 +72,7 @@ export function ForgotPasswordPage() {
           {...register('email')}
         />
         <TurnstileWidget onVerification={setTurnstile} resetKey={turnstileReset} />
-        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} disabled={!turnstile?.token} rightIcon={<ArrowRight className="h-4 w-4" />}>
+        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} disabled={turnstileRequired && !turnstile?.token} rightIcon={<ArrowRight className="h-4 w-4" />}>
           Send reset code
         </Button>
       </form>
