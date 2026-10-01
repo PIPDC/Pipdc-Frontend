@@ -1,4 +1,4 @@
-import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin } from 'lucide-react';
+import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin, FileCheck2 } from 'lucide-react';
 import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { useAuth } from '../../contexts/AuthContext';
 import { primaryRole } from '../../utils/roles';
@@ -14,10 +14,12 @@ import { SavedSection } from '../../components/dashboard/sections/SavedSection';
 import { DevelopmentsSection } from '../../components/dashboard/sections/DevelopmentsSection';
 import { TrackedDevelopmentsSection } from '../../components/dashboard/sections/TrackedDevelopmentsSection';
 import { LocationsSection } from '../../components/dashboard/sections/LocationsSection';
+import { ApplicationsSection } from '../../components/dashboard/sections/ApplicationsSection';
 
 export type DashboardSection =
   | 'properties'
   | 'agents'
+  | 'applications'
   | 'enquiries'
   | 'my-enquiries'
   | 'messages'
@@ -32,6 +34,7 @@ export type DashboardSection =
 const config: Record<DashboardSection, { title: string; description: string }> = {
   properties: { title: 'Properties', description: 'Manage all listings on the PIPDC portal.' },
   agents: { title: 'Agents', description: 'Manage verified PIPDC agents.' },
+  applications: { title: 'Agent Applications', description: 'Review applications to become a PIPDC agent.' },
   enquiries: { title: 'Enquiries', description: 'Review and respond to client enquiries.' },
   'my-enquiries': { title: 'My Enquiries', description: 'Enquiries you have submitted to agents.' },
   messages: { title: 'Messages', description: 'Conversations between clients and property agents.' },
@@ -52,6 +55,7 @@ const agentDescriptions: Partial<Record<DashboardSection, string>> = {
 const sectionIcons: Record<DashboardSection, React.ReactNode> = {
   properties: <Building2 className="h-5 w-5" />,
   agents: <Users className="h-5 w-5" />,
+  applications: <FileCheck2 className="h-5 w-5" />,
   enquiries: <MessageSquare className="h-5 w-5" />,
   'my-enquiries': <MessageSquare className="h-5 w-5" />,
   messages: <MessagesSquare className="h-5 w-5" />,
@@ -82,6 +86,7 @@ export function DashboardSectionPage({ section }: { section: DashboardSection })
 
       {section === 'properties' && <PropertiesSection />}
       {section === 'agents' && <AgentsSection />}
+      {section === 'applications' && <ApplicationsSection />}
       {section === 'enquiries' && <EnquiriesSection title={role === 'Agent' ? 'My Enquiries' : 'Enquiries by Agent'} />}
       {section === 'my-enquiries' && <MyEnquiriesSection />}
       {section === 'messages' && <MessagingSection />}

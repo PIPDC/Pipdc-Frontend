@@ -14,6 +14,7 @@ import {
   HardHat,
   Radar,
   MapPin,
+  FileCheck2,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,6 +28,7 @@ const adminItems = [
   { label: 'Locations', to: '/dashboard/locations', icon: MapPin },
   { label: 'Developments', to: '/dashboard/developments', icon: HardHat },
   { label: 'Agents', to: '/dashboard/agents', icon: Users },
+  { label: 'Agent Applications', to: '/dashboard/applications', icon: FileCheck2 },
   { label: 'Enquiries', to: '/dashboard/enquiries', icon: MessageSquare },
   { label: 'Messages', to: '/dashboard/messages', icon: MessagesSquare },
   { label: 'Blog', to: '/dashboard/blog', icon: Newspaper },
