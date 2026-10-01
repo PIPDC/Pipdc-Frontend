@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { UserPlus, UserMinus, Eye, ShieldCheck, ShieldOff, Search } from 'lucide-react';
+import { UserMinus, Eye, ShieldCheck, ShieldOff, Search } from 'lucide-react';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Modal } from '../../ui/Modal';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { useAddRole, useRemoveRole, useDeactivateUser, useActivateUser } from '../../../hooks/mutations';
+import { useRemoveRole, useDeactivateUser, useActivateUser } from '../../../hooks/mutations';
 import { useUsers, useAgentProperties, useUser } from '../../../hooks/queries';
 import { useAuth } from '../../../contexts/AuthContext';
 import { formatDate } from '../../../utils/format';
@@ -22,12 +22,10 @@ export function UsersSection() {
   const usersQuery = useUsers({ pageNumber: page, pageSize: PAGE_SIZE, keyword: keyword || undefined });
   const { user: currentUser } = useAuth();
   const { notify } = useToast();
-  const addRole = useAddRole();
   const removeRole = useRemoveRole();
   const deactivateUser = useDeactivateUser();
   const activateUser = useActivateUser();
 
-  const [promoting, setPromoting] = useState<User | null>(null);
   const [demoting, setDemoting] = useState<User | null>(null);
   const [viewing, setViewing] = useState<User | null>(null);
   const [deactivating, setDeactivating] = useState<User | null>(null);
@@ -40,17 +38,6 @@ export function UsersSection() {
 
   const users = usersQuery.data?.items ?? [];
   const totalCount = usersQuery.data?.totalCount ?? 0;
-
-  const confirmPromote = async () => {
-    if (!promoting) return;
-    try {
-      await addRole.mutateAsync({ email: promoting.email, role: 'Agent' });
-      notify({ type: 'success', title: 'Promoted to Agent', description: `${promoting.fullName} now has the Agent role.` });
-      setPromoting(null);
-    } catch (err) {
-      notify({ type: 'error', title: 'Could not promote user', description: extractApiError(err) });
-    }
-  };
 
   const confirmDemote = async () => {
     if (!demoting) return;
@@ -167,16 +154,6 @@ export function UsersSection() {
                             <ShieldCheck className="h-4 w-4" />
                           </button>
                         )}
-                        {!isAdmin && !isAgent && (
-                          <button
-                            type="button"
-                            title="Promote to Agent"
-                            onClick={() => setPromoting(u)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
-                          >
-                            <UserPlus className="h-4 w-4" />
-                          </button>
-                        )}
                         {isAgent && !isAdmin && (
                           <button
                             type="button"
@@ -267,17 +244,6 @@ export function UsersSection() {
           </div>
         ) : null}
       </Modal>
-
-      <ConfirmDialog
-        open={Boolean(promoting)}
-        title="Promote user to Agent"
-        description={`${promoting?.fullName} will receive the Agent role and a PIPDC Agency profile they can use to list properties.`}
-        confirmLabel="Promote to Agent"
-        tone="primary"
-        loading={addRole.isPending}
-        onConfirm={confirmPromote}
-        onCancel={() => setPromoting(null)}
-      />
 
       <ConfirmDialog
         open={Boolean(demoting)}

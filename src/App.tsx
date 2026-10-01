@@ -21,6 +21,7 @@ import { BlogPage } from './pages/blog/BlogPage';
 import { BlogDetailPage } from './pages/blog/BlogDetailPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
+import { ApplyAgentPage } from './pages/ApplyAgentPage';
 import { DevelopmentsPage } from './pages/DevelopmentsPage';
 import { DevelopmentDetailsPage } from './pages/DevelopmentDetailsPage';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -80,7 +81,10 @@ const router = createBrowserRouter([
         <PublicLayout />
       </RequireAuth>
     ),
-    children: [{ path: '/assistant', element: <AiAssistantPage /> }],
+    children: [
+      { path: '/assistant', element: <AiAssistantPage /> },
+      { path: '/apply-agent', element: <ApplyAgentPage /> },
+    ],
   },
   {
     path: '/dashboard',
@@ -104,6 +108,14 @@ const router = createBrowserRouter([
         element: (
           <AdminGuard>
             <DashboardSectionPage section="agents" />
+          </AdminGuard>
+        ),
+      },
+      {
+        path: 'applications',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="applications" />
           </AdminGuard>
         ),
       },
