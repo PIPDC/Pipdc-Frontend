@@ -15,6 +15,7 @@ import { formatDate } from '../../utils/format';
 import { HeroSection } from './HeroSection';
 import { WhyChooseSection } from './WhyChooseSection';
 import { FeaturedDevelopmentsSection } from './FeaturedDevelopmentsSection';
+import { PropertiesNearYouSection } from './PropertiesNearYouSection';
 import { StatsSection } from './StatsSection';
 import { CTASection } from './CTASection';
 
@@ -98,6 +99,9 @@ export function HomePage() {
       </section>
 
       <WhyChooseSection />
+
+      {/* Batch 5: signed-in only; renders nothing for anonymous visitors */}
+      <PropertiesNearYouSection />
 
       <FeaturedDevelopmentsSection />
 

@@ -46,6 +46,58 @@ export interface Agent {
   fullName: string;
   createdAt: string;
   propertyCount: number;
+  /** Mean of published client ratings, or null when the agent has no reviews yet. */
+  averageRating: number | null;
+  reviewCount: number;
+  /** Always false for public callers; only the admin directory sees true. */
+  isSuspended: boolean;
+  suspendedAt: string | null;
+  suspensionReason: string | null;
+  /**
+   * Removed means the registration was revoked, not deleted. A removed agent keeps
+   * their rows, reviews and reports, and can be reinstated by an upheld appeal.
+   */
+  isRemoved?: boolean;
+  removedAt?: string | null;
+  removalReason?: string | null;
+  /** The agent who took over this one's listings, if they were handed on. */
+  reassignedToAgentId?: number | null;
+}
+
+export interface AgentReport {
+  id: number;
+  agentId: number;
+  agentName: string;
+  agentAgency: string;
+  reporterUserId: string;
+  reporterName: string;
+  reporterEmail: string;
+  reason: string;
+  status: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string | null;
+  reviewedAt: string | null;
+  reviewedByAdminId: string | null;
+  resolutionNote: string | null;
+}
+
+export interface AgentReview {
+  id: number;
+  agentId: number;
+  agentName: string;
+  reviewerUserId: string;
+  reviewerName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface AgentReviewSummary {
+  averageRating: number | null;
+  reviewCount: number;
+  reviews: AgentReview[];
 }
 
 export interface Property {
@@ -89,6 +141,25 @@ export interface Property {
 export interface SavedProperty {
   property: Property;
   savedAt: string;
+}
+
+/** A nearby result: the usual property, plus how it was matched. */
+export interface NearbyProperty {
+  property: Property;
+  /** Null when the match was by saved area rather than by real distance. */
+  distanceKm: number | null;
+  /** Pre-formatted label, e.g. "2.4 km away" or an area name. Null in area mode. */
+  distanceLabel: string | null;
+}
+
+export interface NearbyProperties {
+  items: NearbyProperty[];
+  hasLocation: boolean;
+  /** False means results are by saved area and no km figure can be trusted. */
+  distanceAvailable: boolean;
+  locationName: string | null;
+  /** "distance" | "area" | "none" */
+  mode: string;
 }
 
 export interface Tag {
@@ -247,6 +318,11 @@ export interface AuthUser {
   phoneNumber: string | null;
   fullName: string;
   roles: string[];
+  /** Batch 5: saved location, used by the "Properties Near You" section. */
+  locationId?: number | null;
+  locationName?: string | null;
+  locationType?: string | null;
+  hasCoordinates?: boolean;
 }
 
 export interface AuthResponse {
@@ -336,6 +412,13 @@ export interface AgentSummary {
   propertyCount: number;
   enquiryCount: number;
   conversationCount: number;
+  averageRating: number | null;
+  reviewCount: number;
+  /** Admin-facing triage backlog for this agent. Not public-facing content. */
+  openReportCount: number;
+  isSuspended: boolean;
+  suspendedAt: string | null;
+  suspensionReason: string | null;
 }
 
 export interface Paginated<T> {

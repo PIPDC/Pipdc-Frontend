@@ -85,15 +85,19 @@ export const authService = {
     const { data } = await api.get<AuthUser>('/auth/me');
     return data;
   },
-  async updateProfile(payload: { firstName: string; lastName: string; phoneNumber?: string | null }): Promise<AuthUser> {
+  async updateProfile(payload: {
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string | null;
+    locationId?: number | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): Promise<AuthUser> {
     const { data } = await api.put<AuthUser>('/auth/me', payload);
     return data;
   },
   async addRole(payload: { email: string; role: string }): Promise<void> {
     await api.post('/auth/add-role', payload);
-  },
-  async removeRole(payload: { email: string; role: string }): Promise<void> {
-    await api.post('/auth/remove-role', payload);
   },
   async changePassword(payload: { currentPassword: string; newPassword: string }): Promise<void> {
     await api.post('/auth/change-password', payload);
