@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import {
   Bed, Bath, Maximize, MapPin, Calendar, Check, Phone, Mail, Share2,
   Heart, ArrowLeft, ChevronLeft, ChevronRight, BadgeCheck, Star, AlertTriangle, MessagesSquare,
-  MessageSquare,
+  MessageSquare, CheckCircle2,
 } from 'lucide-react';
 import { useProperty, useSimilarProperties, useAgent, usePropertyEnquiries } from '../hooks/queries';
 import { useFavourites } from '../hooks/useFavourites';
 import { useAuth } from '../contexts/AuthContext';
 import { conversationService } from '../services/conversationService';
+import { enquiryService } from '../services/enquiryService';
 import { extractApiError } from '../services/api';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Badge } from '../components/ui/Badge';
@@ -21,6 +22,8 @@ import { cn } from '../utils/cn';
 import { propertyStatusLabel, listingTypeLabel } from '../utils/propertyStatus';
 import { primaryRole } from '../utils/roles';
 
+const MIN_ENQUIRY_LENGTH = 20;
+
 export function PropertyDetailsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -31,6 +34,10 @@ export function PropertyDetailsPage() {
   const { user } = useAuth();
   const [activeImage, setActiveImage] = useState(0);
   const [starting, setStarting] = useState(false);
+  const [enquiryMessage, setEnquiryMessage] = useState('');
+  const [enquirySent, setEnquirySent] = useState(false);
+  const [sendingEnquiry, setSendingEnquiry] = useState(false);
+  const [enquiryError, setEnquiryError] = useState<string | null>(null);
   const { isFavourite, toggle } = useFavourites();
   const { notify } = useToast();
 
@@ -63,19 +70,61 @@ export function PropertyDetailsPage() {
   const similar = similarQuery.data ?? [];
   const fav = isFavourite(property.id);
 
+  // Messaging and enquiries are separate. Starting a conversation no longer
+  // raises an enquiry as a side effect; the client opens an existing
+  // conversation about this property, or starts a fresh one from the messages
+  // page. Only the enquiry form below creates an Enquiry.
   const startMessaging = async () => {
     if (!user) {
-      navigate('/login', { state: { from: `/dashboard/messages?property=${property.id}` } });
+      navigate('/login', { state: { from: `/properties/${slug}` } });
       return;
     }
     setStarting(true);
     try {
-      const enquiry = await conversationService.resolveEnquiryForProperty(property.id, crypto.randomUUID());
-      navigate(`/dashboard/messages?enquiry=${enquiry.id}`);
+      const existing = await enquiryService.mineByProperty(property.id);
+      const conversationId = existing ? await conversationService.getConversationForEnquiry(existing.id) : null;
+
+      navigate(
+        conversationId === null
+          ? `/dashboard/messages?property=${property.id}`
+          : `/dashboard/messages?conversation=${conversationId}`,
+      );
     } catch (err) {
       notify({ type: 'error', title: 'Could not start conversation', description: extractApiError(err) });
     } finally {
       setStarting(false);
+    }
+  };
+
+  // Sends a real enquiry. The API emails the assigned agent, so the success
+  // state is the confirmation the client needs, not a silent navigation.
+  const sendEnquiry = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/properties/${slug}` } });
+      return;
+    }
+    if (enquiryMessage.trim().length < MIN_ENQUIRY_LENGTH) {
+      setEnquiryError(`Please write at least ${MIN_ENQUIRY_LENGTH} characters so the agent can help.`);
+      return;
+    }
+    setSendingEnquiry(true);
+    setEnquiryError(null);
+    try {
+      await enquiryService.create(
+        { message: enquiryMessage.trim(), propertyId: property.id },
+        crypto.randomUUID(),
+      );
+      setEnquirySent(true);
+      setEnquiryMessage('');
+      notify({
+        type: 'success',
+        title: 'Enquiry sent',
+        description: `The agent for ${property.title} has been emailed and will get back to you.`,
+      });
+    } catch (err) {
+      setEnquiryError(extractApiError(err));
+    } finally {
+      setSendingEnquiry(false);
     }
   };
 
@@ -275,21 +324,67 @@ export function PropertyDetailsPage() {
                 </div>
               </div>
 
+              {/* Enquiry is the primary action and messaging is the secondary one.
+                  They are deliberately separate: an enquiry is a tracked request
+                  that emails the agent, while messaging opens a conversation. */}
               <div className="rounded-2xl border border-ink-100 bg-white p-6 shadow-soft">
-                <h3 className="font-display text-base font-semibold text-ink-900">Message the agent</h3>
+                <h3 className="font-display text-base font-semibold text-ink-900">
+                  Send an enquiry to the agent
+                </h3>
                 <p className="mt-1 text-xs text-ink-500">
-                  Have questions about this property? Start a conversation with {agent?.fullName ?? property.agentName ?? 'the assigned agent'}.
+                  Ask about this property and {agent?.fullName ?? property.agentName ?? 'the assigned agent'}
+                  {' '}will be emailed straight away.
                 </p>
-                <Button
-                  variant="gold"
-                  size="lg"
-                  className="mt-4 w-full"
-                  loading={starting}
-                  leftIcon={<MessagesSquare className="h-4 w-4" />}
-                  onClick={startMessaging}
-                >
-                  Message Agent
-                </Button>
+
+                {enquirySent ? (
+                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-forest-200 bg-forest-50 p-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-forest-600" />
+                    <p className="text-xs text-forest-800">
+                      Your enquiry has been sent. The agent has been notified by email.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      rows={4}
+                      value={enquiryMessage}
+                      onChange={(e) => {
+                        setEnquiryMessage(e.target.value);
+                        if (enquiryError) setEnquiryError(null);
+                      }}
+                      placeholder="I'd like to know more about this property..."
+                      aria-label="Your enquiry"
+                      className="mt-4 w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-700 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40"
+                    />
+                    {enquiryError && <p className="mt-1.5 text-xs text-red-600">{enquiryError}</p>}
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="mt-3 w-full"
+                      loading={sendingEnquiry}
+                      leftIcon={<Mail className="h-4 w-4" />}
+                      onClick={sendEnquiry}
+                    >
+                      Send Enquiry
+                    </Button>
+                  </>
+                )}
+
+                <div className="mt-4 border-t border-ink-100 pt-4">
+                  <p className="text-xs text-ink-500">
+                    Already sent an enquiry and want to talk it through instead?
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    loading={starting}
+                    leftIcon={<MessagesSquare className="h-4 w-4" />}
+                    onClick={startMessaging}
+                  >
+                    Message agent instead
+                  </Button>
+                </div>
               </div>
             </div>
           </aside>

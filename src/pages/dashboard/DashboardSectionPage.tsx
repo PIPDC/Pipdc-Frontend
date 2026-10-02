@@ -1,4 +1,4 @@
-import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin, FileCheck2 } from 'lucide-react';
+﻿import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin, FileCheck2, Flag, Scale } from 'lucide-react';
 import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { useAuth } from '../../contexts/AuthContext';
 import { primaryRole } from '../../utils/roles';
@@ -15,13 +15,21 @@ import { DevelopmentsSection } from '../../components/dashboard/sections/Develop
 import { TrackedDevelopmentsSection } from '../../components/dashboard/sections/TrackedDevelopmentsSection';
 import { LocationsSection } from '../../components/dashboard/sections/LocationsSection';
 import { ApplicationsSection } from '../../components/dashboard/sections/ApplicationsSection';
+import { AppealsSection } from '../../components/dashboard/sections/AppealsSection';
+import { MyAgentApplicationSection } from '../../components/dashboard/sections/MyAgentApplicationSection';
+import { ReportsSection } from '../../components/dashboard/sections/ReportsSection';
+import { MyReportsSection } from '../../components/dashboard/sections/MyReportsSection';
 
 export type DashboardSection =
   | 'properties'
   | 'agents'
+  | 'reports'
   | 'applications'
+  | 'appeals'
+  | 'my-agent-application'
   | 'enquiries'
   | 'my-enquiries'
+  | 'my-reports'
   | 'messages'
   | 'blog'
   | 'users'
@@ -34,9 +42,19 @@ export type DashboardSection =
 const config: Record<DashboardSection, { title: string; description: string }> = {
   properties: { title: 'Properties', description: 'Manage all listings on the PIPDC portal.' },
   agents: { title: 'Agents', description: 'Manage verified PIPDC agents.' },
+  reports: { title: 'Agent Reports', description: 'Triage reports raised by clients about agents.' },
   applications: { title: 'Agent Applications', description: 'Review applications to become a PIPDC agent.' },
+  appeals: {
+    title: 'Appeals & Bars',
+    description: 'Decide registration appeals and manage accounts barred from applying.',
+  },
+  'my-agent-application': {
+    title: 'My Agent Application',
+    description: 'Track the status of your application to become a PIPDC agent.',
+  },
   enquiries: { title: 'Enquiries', description: 'Review and respond to client enquiries.' },
   'my-enquiries': { title: 'My Enquiries', description: 'Enquiries you have submitted to agents.' },
+  'my-reports': { title: 'My Reports', description: 'Reports you have raised about agents, and their outcomes.' },
   messages: { title: 'Messages', description: 'Conversations between clients and property agents.' },
   blog: { title: 'Blog', description: 'Publish insights and market updates.' },
   users: { title: 'Users', description: 'Manage user accounts and roles.' },
@@ -55,9 +73,13 @@ const agentDescriptions: Partial<Record<DashboardSection, string>> = {
 const sectionIcons: Record<DashboardSection, React.ReactNode> = {
   properties: <Building2 className="h-5 w-5" />,
   agents: <Users className="h-5 w-5" />,
+  reports: <Flag className="h-5 w-5" />,
   applications: <FileCheck2 className="h-5 w-5" />,
+  appeals: <Scale className="h-5 w-5" />,
+  'my-agent-application': <FileCheck2 className="h-5 w-5" />,
   enquiries: <MessageSquare className="h-5 w-5" />,
   'my-enquiries': <MessageSquare className="h-5 w-5" />,
+  'my-reports': <Flag className="h-5 w-5" />,
   messages: <MessagesSquare className="h-5 w-5" />,
   blog: <Newspaper className="h-5 w-5" />,
   users: <UserCircle className="h-5 w-5" />,
@@ -86,9 +108,13 @@ export function DashboardSectionPage({ section }: { section: DashboardSection })
 
       {section === 'properties' && <PropertiesSection />}
       {section === 'agents' && <AgentsSection />}
+      {section === 'reports' && <ReportsSection />}
       {section === 'applications' && <ApplicationsSection />}
+      {section === 'appeals' && <AppealsSection />}
+      {section === 'my-agent-application' && <MyAgentApplicationSection />}
       {section === 'enquiries' && <EnquiriesSection title={role === 'Agent' ? 'My Enquiries' : 'Enquiries by Agent'} />}
       {section === 'my-enquiries' && <MyEnquiriesSection />}
+      {section === 'my-reports' && <MyReportsSection />}
       {section === 'messages' && <MessagingSection />}
       {section === 'blog' && <BlogSection />}
       {section === 'users' && <UsersSection />}

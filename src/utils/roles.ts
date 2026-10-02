@@ -17,3 +17,14 @@ export function isAdmin(roles: string[] | undefined): boolean {
 export function isStaff(roles: string[] | undefined): boolean {
   return roles?.some((role) => role === 'Admin' || role === 'Agent') ?? false;
 }
+
+/**
+ * Whether the "Become an Agent" call to action should be offered.
+ *
+ * Only for signed-in users with no staff role. Admins review applications rather
+ * than making them, and an existing agent cannot apply again — the API rejects
+ * both cases, so offering the button would be a dead end.
+ */
+export function canApplyAsAgent(roles: string[] | undefined): boolean {
+  return !isStaff(roles);
+}

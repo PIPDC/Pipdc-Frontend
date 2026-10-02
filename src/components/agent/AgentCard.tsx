@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BadgeCheck, Phone, Building2, ArrowUpRight } from 'lucide-react';
+import { BadgeCheck, Phone, Building2, ArrowUpRight, Star } from 'lucide-react';
 import type { Agent } from '../../types';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
@@ -50,7 +50,15 @@ export function AgentCard({ agent, index = 0 }: AgentCardProps) {
           <span className="inline-flex items-center gap-1 font-semibold text-ink-800">
             <Building2 className="h-4 w-4 text-forest-500" /> {agent.agency}
           </span>
-          <Badge tone="neutral">Verified</Badge>
+          {agent.averageRating != null ? (
+            <span className="inline-flex items-center gap-1 text-ink-700">
+              <Star className="h-4 w-4 fill-gold-400 text-gold-500" />
+              <span className="font-semibold">{agent.averageRating.toFixed(1)}</span>
+              <span className="text-xs text-ink-400">({agent.reviewCount})</span>
+            </span>
+          ) : (
+            <span className="text-xs text-ink-400">No reviews</span>
+          )}
         </div>
         <div className="mt-3 flex items-center gap-2 text-sm text-ink-600">
           <Phone className="h-4 w-4 text-forest-500" />

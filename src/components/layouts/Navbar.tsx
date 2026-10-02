@@ -8,6 +8,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { cn } from '../../utils/cn';
 
+// The signed-in utility links sit on the glass header, so they render flat and
+// only pick up a white pill on hover. The 'nav-link' variant owns that treatment;
+// these classes are the navbar-local extras: a route-is-active fill, and a soft
+// white halo so dark text stays legible over the unscrolled hero image.
+const navLinkButton = (isActive?: boolean, overHero?: boolean) =>
+  cn(isActive && '!bg-white !shadow-[0_2px_8px_rgba(0,0,0,0.08)]', overHero && 'drop-shadow-[0_1px_1px_rgba(255,255,255,0.75)]');
+
 const exploreItems = [
   { label: 'Properties', to: '/properties' },
   { label: 'Developments', to: '/developments' },
@@ -156,16 +163,28 @@ export function Navbar() {
             <div className="h-10 w-28 animate-pulse rounded-xl bg-ink-100" />
           ) : isAuthenticated ? (
             <>
-              <Link to="/dashboard/messages">
-                <Button variant="outline" size="lg" leftIcon={<MessagesSquare className="h-4 w-4" />}>
-                  Messages
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button variant="outline" size="lg" leftIcon={<Building2 className="h-4 w-4" />}>
-                  Dashboard
-                </Button>
-              </Link>
+              <NavLink to="/dashboard/messages" className="inline-flex">
+                {({ isActive }) => (
+                  <Button
+                    variant="nav-link"
+                    className={navLinkButton(isActive, !scrolled)}
+                    leftIcon={<MessagesSquare className="h-4 w-4" />}
+                  >
+                    Messages
+                  </Button>
+                )}
+              </NavLink>
+              <NavLink to="/dashboard" end className="inline-flex">
+                {({ isActive }) => (
+                  <Button
+                    variant="nav-link"
+                    className={navLinkButton(isActive, !scrolled)}
+                    leftIcon={<Building2 className="h-4 w-4" />}
+                  >
+                    Dashboard
+                  </Button>
+                )}
+              </NavLink>
               <Button variant="primary" size="lg" onClick={signOut}>
                 Sign out
               </Button>
@@ -266,12 +285,18 @@ export function Navbar() {
                 ) : isAuthenticated ? (
                   <>
                     <Link to="/dashboard/messages" className="inline-flex" onClick={() => setMobileOpen(false)}>
-                      <Button variant="outline" size="lg" className="w-full" leftIcon={<MessagesSquare className="h-4 w-4" />}>
+                      {/* min-h-11 keeps the full-width row a 44px touch target; the
+                          nav-link variant's own py-2 would otherwise shrink it. */}
+                      <Button
+                        variant="nav-link"
+                        className="w-full !min-h-[44px] !justify-start"
+                        leftIcon={<MessagesSquare className="h-4 w-4" />}
+                      >
                         Messages
                       </Button>
                     </Link>
                     <Link to="/dashboard" className="inline-flex" onClick={() => setMobileOpen(false)}>
-                      <Button variant="outline" size="lg" className="w-full">
+                      <Button variant="nav-link" className="w-full !min-h-[44px] !justify-start">
                         Dashboard
                       </Button>
                     </Link>

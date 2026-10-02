@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 import { useVerifyEmail, useResendVerification } from '../../hooks/mutations';
 import { extractApiError, extractApiErrorCode } from '../../services/api';
+import { isInternalPath } from '../../utils/navigation';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -20,11 +21,20 @@ type VerifyForm = z.infer<typeof schema>;
 
 export function VerifyEmailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { notify } = useToast();
   const email = searchParams.get('email') ?? '';
   const [serverError, setServerError] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+
+  // Carried from registration so a visitor who clicked "Become an Agent" as a
+  // guest still lands on the application form after verifying and signing in.
+  const pendingFrom = (() => {
+    const from = (location.state as { from?: string } | null)?.from;
+    return isInternalPath(from) ? from : undefined;
+  })();
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<VerifyForm>({
     resolver: zodResolver(schema),
   });
@@ -42,11 +52,11 @@ export function VerifyEmailPage() {
     try {
       await verifyEmail.mutateAsync({ email, code: data.code });
       notify({ type: 'success', title: 'Email verified', description: 'Your account is now active. Sign in to continue.' });
-      navigate('/login');
+      navigate('/login', { state: pendingFrom ? { from: pendingFrom } : undefined });
     } catch (err) {
       if (extractApiErrorCode(err) === 'ALREADY_VERIFIED') {
         notify({ type: 'success', title: 'Email verified', description: 'Your account is already active.' });
-        navigate('/login');
+        navigate('/login', { state: pendingFrom ? { from: pendingFrom } : undefined });
         return;
       }
       setServerError(extractApiError(err));
@@ -128,8 +138,12 @@ export function VerifyEmailPage() {
 
       <p className="mt-8 text-center text-sm text-ink-500">
         Wrong email?{' '}
-        <Link to="/login" className="font-semibold text-forest-600 hover:text-forest-700">
-          Sign in
+        <Link
+          to="/login"
+          state={pendingFrom ? { from: pendingFrom } : undefined}
+          className="font-semibold text-forest-600 hover:text-forest-700"
+        >
+          Sign in or create an account
         </Link>
       </p>
     </div>

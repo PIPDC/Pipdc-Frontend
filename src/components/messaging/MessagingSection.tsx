@@ -8,6 +8,7 @@ import { useMarkConversationRead } from '../../hooks/mutations';
 import { useConversationSubscription } from '../../hooks/useConversationSubscription';
 import { useNewMessageListener } from '../../hooks/useNewMessageListener';
 import { conversationService } from '../../services/conversationService';
+import { enquiryService } from '../../services/enquiryService';
 import { extractApiError } from '../../services/api';
 import { useToast } from '../ui/Toast';
 import { Button } from '../ui/Button';
@@ -67,15 +68,42 @@ export function MessagingSection() {
     setSearchParams({ conversation: String(conversationId) }, { replace: true });
   }, [enquiryId, stateQuery.data, selectedId, setSearchParams]);
 
-  // Direct ?property= entry (e.g. after a login redirect) resolves the enquiry without
-  // ever creating a Conversation, then switches to the enquiry param.
+  // Direct ?property= entry (e.g. after a login redirect) looks for an existing
+  // conversation about that property WITHOUT creating an enquiry. If the client
+  // has messaged about it before, the conversation is opened; if not, they are
+  // sent back to the property to use the enquiry form or start a conversation
+  // deliberately. Opening a conversation must not silently raise an enquiry.
   useEffect(() => {
     if (propertyId === null || attemptedProperty.current === propertyId || !user) return;
     attemptedProperty.current = propertyId;
     setResolvingProperty(true);
-    conversationService
-      .resolveEnquiryForProperty(propertyId, crypto.randomUUID())
-      .then((enquiry) => setSearchParams({ enquiry: String(enquiry.id) }, { replace: true }))
+    enquiryService
+      .mineByProperty(propertyId)
+      .then((enquiry) => {
+        if (!enquiry) {
+          notify({
+            type: 'info',
+            title: 'No conversation yet',
+            description: 'Send an enquiry or start a conversation from the property page.',
+          });
+          setSearchParams({}, { replace: true });
+          return;
+        }
+        return conversationService
+          .getConversationForEnquiry(enquiry.id)
+          .then((conversationId) => {
+            if (conversationId === null) {
+              notify({
+                type: 'info',
+                title: 'No conversation yet',
+                description: 'Send an enquiry or start a conversation from the property page.',
+              });
+              setSearchParams({}, { replace: true });
+              return;
+            }
+            setSearchParams({ conversation: String(conversationId) }, { replace: true });
+          });
+      })
       .catch((err) => {
         notify({ type: 'error', title: 'Could not open conversation', description: extractApiError(err) });
         setSearchParams({}, { replace: true });

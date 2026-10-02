@@ -17,6 +17,15 @@ const resolveEnquiryForProperty = async (propertyId: number, idempotencyKey?: st
   return enquiryService.create({ message: DEFAULT_PROPERTY_ENQUIRY_MESSAGE, propertyId }, idempotencyKey);
 };
 
+// Resolves the conversation linked to an enquiry. Does NOT create an enquiry:
+// a conversation only exists once a client has actually messaged about a
+// property, and the enquiry behind it was created deliberately by the enquiry
+// flow. Used when deep-linking into /dashboard/messages?enquiry=...
+const getConversationForEnquiry = async (enquiryId: number): Promise<number | null> => {
+  const state = await getStateByEnquiry(enquiryId);
+  return state.conversation?.id ?? null;
+};
+
 export const conversationService = {
   async list(params?: Record<string, unknown>): Promise<Paginated<Conversation>> {
     const { data } = await api.get<Paginated<Conversation>>('/conversations', { params });
@@ -28,4 +37,5 @@ export const conversationService = {
   },
   getStateByEnquiry,
   resolveEnquiryForProperty,
+  getConversationForEnquiry,
 };

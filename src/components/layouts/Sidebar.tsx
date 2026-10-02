@@ -1,4 +1,4 @@
-import { NavLink, Link } from 'react-router-dom';
+﻿import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -15,12 +15,15 @@ import {
   Radar,
   MapPin,
   FileCheck2,
+  Flag,
+  Scale,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../contexts/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { cn } from '../../utils/cn';
 import { primaryRole, type Role } from '../../utils/roles';
+import { useMyCurrentApplication } from '../../hooks/useAgentApplications';
 
 const adminItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
@@ -28,7 +31,9 @@ const adminItems = [
   { label: 'Locations', to: '/dashboard/locations', icon: MapPin },
   { label: 'Developments', to: '/dashboard/developments', icon: HardHat },
   { label: 'Agents', to: '/dashboard/agents', icon: Users },
+  { label: 'Agent Reports', to: '/dashboard/reports', icon: Flag },
   { label: 'Agent Applications', to: '/dashboard/applications', icon: FileCheck2 },
+  { label: 'Appeals & Bars', to: '/dashboard/appeals', icon: Scale },
   { label: 'Enquiries', to: '/dashboard/enquiries', icon: MessageSquare },
   { label: 'Messages', to: '/dashboard/messages', icon: MessagesSquare },
   { label: 'Blog', to: '/dashboard/blog', icon: Newspaper },
@@ -49,6 +54,7 @@ const clientItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { label: 'Tracked Projects', to: '/dashboard/tracked', icon: Radar },
   { label: 'My Enquiries', to: '/dashboard/my-enquiries', icon: MessageSquare },
+  { label: 'My Reports', to: '/dashboard/my-reports', icon: Flag },
   { label: 'Messages', to: '/dashboard/messages', icon: MessagesSquare },
   { label: 'Saved Properties', to: '/dashboard/saved', icon: Heart },
   { label: 'Settings', to: '/dashboard/settings', icon: Settings },
@@ -69,6 +75,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const { user, signOut } = useAuth();
   const role = primaryRole(user?.roles);
   const group = groups[role];
+  const currentQuery = useMyCurrentApplication();
+
+  // The "My Agent Application" link only appears once the user has actually
+  // applied. Before that there is nothing in the dashboard to show, and the
+  // "Become an Agent" entry in the navbar is the way in. A rejected
+  // application still counts, so the user can read the reason and reapply.
+  const hasApplication = currentQuery.data != null;
+  const items =
+    role === 'Client' && hasApplication
+      ? [...clientItems, { label: 'My Agent Application', to: '/dashboard/my-agent-application', icon: FileCheck2 }]
+      : group.items;
 
   useScrollLock(open);
 
@@ -102,7 +119,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto px-4 py-6">
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">{group.label}</p>
           <ul className="mt-3 space-y-1">
-            {group.items.map((item) => (
+            {items.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}

@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { UserMinus, Eye, ShieldCheck, ShieldOff, Search } from 'lucide-react';
+import { Eye, ShieldCheck, ShieldOff, Search } from 'lucide-react';
 import { Badge } from '../../ui/Badge';
-import { Button } from '../../ui/Button';
 import { Modal } from '../../ui/Modal';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { useRemoveRole, useDeactivateUser, useActivateUser } from '../../../hooks/mutations';
-import { useUsers, useAgentProperties, useUser } from '../../../hooks/queries';
+import { useDeactivateUser, useActivateUser } from '../../../hooks/mutations';
+import { useUsers, useUser } from '../../../hooks/queries';
 import { useAuth } from '../../../contexts/AuthContext';
 import { formatDate } from '../../../utils/format';
 import { extractApiError } from '../../../services/api';
@@ -22,33 +21,17 @@ export function UsersSection() {
   const usersQuery = useUsers({ pageNumber: page, pageSize: PAGE_SIZE, keyword: keyword || undefined });
   const { user: currentUser } = useAuth();
   const { notify } = useToast();
-  const removeRole = useRemoveRole();
   const deactivateUser = useDeactivateUser();
   const activateUser = useActivateUser();
 
-  const [demoting, setDemoting] = useState<User | null>(null);
   const [viewing, setViewing] = useState<User | null>(null);
   const [deactivating, setDeactivating] = useState<User | null>(null);
   const [activating, setActivating] = useState<User | null>(null);
 
   const detailQuery = useUser(viewing?.id);
 
-  const propertyQuery = useAgentProperties(demoting?.agentId ?? undefined);
-  const affectedCount = propertyQuery.data?.totalCount ?? 0;
-
   const users = usersQuery.data?.items ?? [];
   const totalCount = usersQuery.data?.totalCount ?? 0;
-
-  const confirmDemote = async () => {
-    if (!demoting) return;
-    try {
-      await removeRole.mutateAsync({ email: demoting.email, role: 'Agent' });
-      notify({ type: 'success', title: 'Agent role removed', description: `${demoting.fullName} is no longer an agent.` });
-      setDemoting(null);
-    } catch (err) {
-      notify({ type: 'error', title: 'Could not remove Agent role', description: extractApiError(err) });
-    }
-  };
 
   const confirmDeactivate = async () => {
     if (!deactivating) return;
@@ -154,16 +137,6 @@ export function UsersSection() {
                             <ShieldCheck className="h-4 w-4" />
                           </button>
                         )}
-                        {isAgent && !isAdmin && (
-                          <button
-                            type="button"
-                            title="Remove Agent role"
-                            onClick={() => setDemoting(u)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <UserMinus className="h-4 w-4" />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -244,24 +217,6 @@ export function UsersSection() {
           </div>
         ) : null}
       </Modal>
-
-      <ConfirmDialog
-        open={Boolean(demoting)}
-        title="Remove Agent role"
-        description={
-          demoting ? (
-            <span>
-              {demoting.fullName} currently owns{' '}
-              <span className="font-semibold text-ink-900">{affectedCount}</span> property listing{affectedCount === 1 ? '' : 's'}.
-              These will be transferred to the administrator agent account before the role is removed.
-            </span>
-          ) : undefined
-        }
-        confirmLabel="Remove Agent role"
-        loading={removeRole.isPending}
-        onConfirm={confirmDemote}
-        onCancel={() => setDemoting(null)}
-      />
 
       <ConfirmDialog
         open={Boolean(deactivating)}

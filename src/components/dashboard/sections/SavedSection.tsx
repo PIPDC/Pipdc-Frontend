@@ -6,11 +6,8 @@ import { Button } from '../../ui/Button';
 import { useSavedProperties } from '../../../hooks/queries';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useFavourites } from '../../../hooks/useFavourites';
-import { conversationService } from '../../../services/conversationService';
-import { extractApiError } from '../../../services/api';
 import { formatPrice, timeAgo } from '../../../utils/format';
 import { propertyStatusLabel } from '../../../utils/propertyStatus';
-import { useToast } from '../../ui/Toast';
 import { CardTable, RowActions, LoadingRows, TableEmpty, thClass, tdClass, SectionFooter } from './shared';
 
 const PAGE_SIZE = 10;
@@ -29,22 +26,17 @@ export function SavedSection() {
   const savedQuery = useSavedProperties({ pageNumber: page, pageSize: PAGE_SIZE });
   const { isAuthenticated } = useAuth();
   const { toggle } = useFavourites();
-  const { notify } = useToast();
-  const [enquiringId, setEnquiringId] = useState<number | null>(null);
 
   const items = savedQuery.data?.items ?? [];
   const totalCount = savedQuery.data?.totalCount ?? 0;
 
-  const handleEnquire = async (propertyId: number) => {
-    setEnquiringId(propertyId);
-    try {
-      const enquiry = await conversationService.resolveEnquiryForProperty(propertyId, crypto.randomUUID());
-      navigate(`/dashboard/messages?enquiry=${enquiry.id}`);
-    } catch (err) {
-      notify({ type: 'error', title: 'Could not start conversation', description: extractApiError(err) });
-    } finally {
-      setEnquiringId(null);
-    }
+  // Saved-property "Enquire" sends the client to the property page, which owns
+  // the enquiry form. Creating an enquiry here (as this used to) is what made
+  // enquiries appear out of nowhere with a canned message.
+  // The slug, not the id: the public property route is addressed by slug, and
+  // every other link into it (RowActions here, the enquiry sections) does the same.
+  const handleEnquire = (slug: string) => {
+    navigate(`/properties/${slug}`);
   };
 
   return (
@@ -82,8 +74,7 @@ export function SavedSection() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      loading={enquiringId === sp.property.id}
-                      onClick={() => handleEnquire(sp.property.id)}
+                      onClick={() => handleEnquire(sp.property.slug)}
                       leftIcon={<MessagesSquare className="h-3.5 w-3.5" />}
                     >
                       Enquire

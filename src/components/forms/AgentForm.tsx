@@ -108,7 +108,10 @@ export function AgentForm({ open, agent, onClose }: AgentFormProps) {
 
     try {
       if (isEditing && agent) {
-        payload.verified = data.verified;
+        // The API contract is IsVerified on UpdateAgentRequest. Sending
+        // "verified" left the flag at its default, so the checkbox silently
+        // reverted the agent to unverified on every profile save.
+        payload.isVerified = data.verified;
         await updateAgent.mutateAsync({ id: agent.id, payload });
         notify({ type: 'success', title: 'Agent updated', description: `${agent.fullName}'s profile was updated.` });
       } else {
