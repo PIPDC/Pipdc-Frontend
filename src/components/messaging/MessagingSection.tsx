@@ -1,23 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { AlertTriangle, MessagesSquare, RefreshCw } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { primaryRole } from '../../utils/roles';
-import { useConversations, useConversation, useEnquiryConversationState } from '../../hooks/queries';
-import { useMarkConversationRead } from '../../hooks/mutations';
-import { useConversationSubscription } from '../../hooks/useConversationSubscription';
-import { useNewMessageListener } from '../../hooks/useNewMessageListener';
-import { conversationService } from '../../services/conversationService';
-import { enquiryService } from '../../services/enquiryService';
-import { extractApiError } from '../../services/api';
-import { useToast } from '../ui/Toast';
-import { Button } from '../ui/Button';
-import { EmptyState } from '../ui/EmptyState';
-import { cn } from '../../utils/cn';
-import type { Conversation } from '../../types';
-import { ConversationList } from './ConversationList';
-import { ConversationView } from './ConversationView';
-import { NewConversationView } from './NewConversationView';
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AlertTriangle, MessagesSquare, RefreshCw } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { primaryRole } from "../../utils/roles";
+import {
+  useConversations,
+  useConversation,
+  useEnquiryConversationState,
+} from "../../hooks/queries";
+import { useMarkConversationRead } from "../../hooks/mutations";
+import { useConversationSubscription } from "../../hooks/useConversationSubscription";
+import { useNewMessageListener } from "../../hooks/useNewMessageListener";
+import { useEscalationChangeListener } from "../../hooks/useEscalationChangeListener";
+import { conversationService } from "../../services/conversationService";
+import { enquiryService } from "../../services/enquiryService";
+import { extractApiError } from "../../services/api";
+import { useToast } from "../ui/Toast";
+import { Button } from "../ui/Button";
+import { EmptyState } from "../ui/EmptyState";
+import { cn } from "../../utils/cn";
+import type { Conversation } from "../../types";
+import { ConversationList } from "./ConversationList";
+import { ConversationView } from "./ConversationView";
+import { NewConversationView } from "./NewConversationView";
 
 export function MessagingSection() {
   const { user } = useAuth();
@@ -25,27 +30,38 @@ export function MessagingSection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const role = primaryRole(user?.roles);
 
-  const conversationParam = searchParams.get('conversation');
-  const selectedId = conversationParam && /^\d+$/.test(conversationParam) ? Number(conversationParam) : null;
+  const conversationParam = searchParams.get("conversation");
+  const selectedId =
+    conversationParam && /^\d+$/.test(conversationParam)
+      ? Number(conversationParam)
+      : null;
 
   useConversationSubscription(selectedId);
   useNewMessageListener();
+  useEscalationChangeListener();
 
-  const enquiryParam = searchParams.get('enquiry');
-  const enquiryId = enquiryParam && /^\d+$/.test(enquiryParam) ? Number(enquiryParam) : null;
+  const enquiryParam = searchParams.get("enquiry");
+  const enquiryId =
+    enquiryParam && /^\d+$/.test(enquiryParam) ? Number(enquiryParam) : null;
 
-  const propertyParam = searchParams.get('property');
-  const propertyId = propertyParam && /^\d+$/.test(propertyParam) ? Number(propertyParam) : null;
+  const propertyParam = searchParams.get("property");
+  const propertyId =
+    propertyParam && /^\d+$/.test(propertyParam) ? Number(propertyParam) : null;
 
   const conversationsQuery = useConversations();
   const listItems = conversationsQuery.data?.items ?? [];
 
-  const needsDetailFetch = selectedId !== null && !listItems.some((c) => c.id === selectedId);
-  const conversationDetail = useConversation(needsDetailFetch ? selectedId : undefined);
+  const needsDetailFetch =
+    selectedId !== null && !listItems.some((c) => c.id === selectedId);
+  const conversationDetail = useConversation(
+    needsDetailFetch ? selectedId : undefined,
+  );
   const [justCreated, setJustCreated] = useState<Conversation | null>(null);
   const selected =
     justCreated ??
-    (selectedId !== null ? listItems.find((c) => c.id === selectedId) ?? conversationDetail.data : undefined);
+    (selectedId !== null
+      ? (listItems.find((c) => c.id === selectedId) ?? conversationDetail.data)
+      : undefined);
 
   const stateQuery = useEnquiryConversationState(enquiryId ?? undefined);
   const markRead = useMarkConversationRead();
@@ -65,7 +81,10 @@ export function MessagingSection() {
     if (enquiryId === null || !stateQuery.data?.conversation) return;
     const conversationId = stateQuery.data.conversation.id;
     if (selectedId === conversationId) return;
-    setSearchParams({ conversation: String(conversationId) }, { replace: true });
+    setSearchParams(
+      { conversation: String(conversationId) },
+      { replace: true },
+    );
   }, [enquiryId, stateQuery.data, selectedId, setSearchParams]);
 
   // Direct ?property= entry (e.g. after a login redirect) looks for an existing
@@ -74,7 +93,12 @@ export function MessagingSection() {
   // sent back to the property to use the enquiry form or start a conversation
   // deliberately. Opening a conversation must not silently raise an enquiry.
   useEffect(() => {
-    if (propertyId === null || attemptedProperty.current === propertyId || !user) return;
+    if (
+      propertyId === null ||
+      attemptedProperty.current === propertyId ||
+      !user
+    )
+      return;
     attemptedProperty.current = propertyId;
     setResolvingProperty(true);
     enquiryService
@@ -82,9 +106,10 @@ export function MessagingSection() {
       .then((enquiry) => {
         if (!enquiry) {
           notify({
-            type: 'info',
-            title: 'No conversation yet',
-            description: 'Send an enquiry or start a conversation from the property page.',
+            type: "info",
+            title: "No conversation yet",
+            description:
+              "Send an enquiry or start a conversation from the property page.",
           });
           setSearchParams({}, { replace: true });
           return;
@@ -94,33 +119,54 @@ export function MessagingSection() {
           .then((conversationId) => {
             if (conversationId === null) {
               notify({
-                type: 'info',
-                title: 'No conversation yet',
-                description: 'Send an enquiry or start a conversation from the property page.',
+                type: "info",
+                title: "No conversation yet",
+                description:
+                  "Send an enquiry or start a conversation from the property page.",
               });
               setSearchParams({}, { replace: true });
               return;
             }
-            setSearchParams({ conversation: String(conversationId) }, { replace: true });
+            setSearchParams(
+              { conversation: String(conversationId) },
+              { replace: true },
+            );
           });
       })
       .catch((err) => {
-        notify({ type: 'error', title: 'Could not open conversation', description: extractApiError(err) });
+        notify({
+          type: "error",
+          title: "Could not open conversation",
+          description: extractApiError(err),
+        });
         setSearchParams({}, { replace: true });
       })
       .finally(() => setResolvingProperty(false));
   }, [propertyId, user, notify, setSearchParams]);
 
   useEffect(() => {
-    if (selectedId === null || role === 'Admin' || attemptedRead.current === selectedId) return;
+    if (
+      selectedId === null ||
+      role === "Admin" ||
+      attemptedRead.current === selectedId
+    )
+      return;
     attemptedRead.current = selectedId;
     markRead.mutate(selectedId);
   }, [selectedId, role, markRead]);
 
-  const canSend = role !== 'Admin';
-  const currentUserId = user?.id ?? '';
+  const canSend = role !== "Admin";
+  const currentUserId = user?.id ?? "";
+  // Batch 6: only the agent who actually handles the listing may hand the thread
+  // over. Derived from the conversation's own agent id, not from a role alone.
+  const isAssignedAgent =
+    role === "Agent" &&
+    selected != null &&
+    selected.agent.agentId != null &&
+    selected.agent.userId === currentUserId;
 
-  const hasActivePane = selectedId !== null || enquiryId !== null || resolvingProperty;
+  const hasActivePane =
+    selectedId !== null || enquiryId !== null || resolvingProperty;
 
   const renderPane = () => {
     if (resolvingProperty) {
@@ -133,7 +179,10 @@ export function MessagingSection() {
     }
 
     if (enquiryId !== null) {
-      if (stateQuery.isLoading || (stateQuery.data?.conversation && !selected)) {
+      if (
+        stateQuery.isLoading ||
+        (stateQuery.data?.conversation && !selected)
+      ) {
         return (
           <div className="flex h-[70dvh] min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white text-ink-500">
             <span className="h-10 w-10 animate-spin rounded-full border-4 border-forest-500 border-t-transparent" />
@@ -147,7 +196,12 @@ export function MessagingSection() {
           <div className="flex h-[70dvh] min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white text-ink-500">
             <AlertTriangle className="h-6 w-6 text-gold-500" />
             <p className="text-sm">Could not load this conversation.</p>
-            <Button variant="outline" size="sm" leftIcon={<RefreshCw className="h-4 w-4" />} onClick={() => stateQuery.refetch()}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<RefreshCw className="h-4 w-4" />}
+              onClick={() => stateQuery.refetch()}
+            >
               Try again
             </Button>
           </div>
@@ -166,7 +220,10 @@ export function MessagingSection() {
             canSend={canSend}
             onSent={(conversation) => {
               setJustCreated(conversation);
-              setSearchParams({ conversation: String(conversation.id) }, { replace: true });
+              setSearchParams(
+                { conversation: String(conversation.id) },
+                { replace: true },
+              );
             }}
             onBack={() => setSearchParams({}, { replace: true })}
           />
@@ -180,6 +237,8 @@ export function MessagingSection() {
           conversation={selected}
           currentUserId={currentUserId}
           canSend={canSend}
+          isAdmin={role === "Admin"}
+          isAssignedAgent={isAssignedAgent}
           onBack={() => setSearchParams({}, { replace: true })}
         />
       );
@@ -196,7 +255,7 @@ export function MessagingSection() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[340px,minmax(0,1fr)]">
-      <div className={cn(hasActivePane ? 'hidden lg:block' : undefined)}>
+      <div className={cn(hasActivePane ? "hidden lg:block" : undefined)}>
         <ConversationList
           conversations={listItems}
           isLoading={conversationsQuery.isLoading}
@@ -207,7 +266,9 @@ export function MessagingSection() {
           onSelect={(id) => setSearchParams({ conversation: String(id) })}
         />
       </div>
-      <div className={cn(!hasActivePane ? 'hidden lg:block' : undefined)}>{renderPane()}</div>
+      <div className={cn(!hasActivePane ? "hidden lg:block" : undefined)}>
+        {renderPane()}
+      </div>
     </div>
   );
 }
