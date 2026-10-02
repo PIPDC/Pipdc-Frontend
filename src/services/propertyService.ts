@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Paginated, Property, PropertyFilters } from '../types';
+import type { NearbyProperties, Paginated, Property, PropertyFilters } from '../types';
 
 export const propertyService = {
   async list(filters?: PropertyFilters): Promise<Paginated<Property>> {
@@ -8,6 +8,11 @@ export const propertyService = {
   },
   async featured(): Promise<Property[]> {
     const { data } = await api.get<Property[]>('/properties/featured');
+    return data;
+  },
+  /** Authenticated only. The server derives whose location to use from the token. */
+  async nearby(): Promise<NearbyProperties> {
+    const { data } = await api.get<NearbyProperties>('/properties/nearby');
     return data;
   },
   async getBySlug(slug: string): Promise<Property> {

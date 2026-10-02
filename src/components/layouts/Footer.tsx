@@ -3,6 +3,8 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight
 import { Logo } from '../brand/Logo';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { useAuth } from '../../contexts/AuthContext';
+import { canApplyAsAgent } from '../../utils/roles';
 
 const quickLinks = [
   { label: 'Home', to: '/' },
@@ -15,7 +17,7 @@ const quickLinks = [
 const resourceLinks = [
   { label: 'Property Guidelines', to: '/about' },
   { label: 'Land Documentation', to: '/about' },
-  { label: 'Become an Agent', to: '/register' },
+  { label: 'Become an Agent', to: '/apply-agent' },
   { label: 'Investor Portal', to: '/properties' },
   { label: 'FAQs', to: '/contact' },
 ];
@@ -28,6 +30,14 @@ const socials = [
 ];
 
 export function Footer() {
+  const { user, isAuthenticated } = useAuth();
+
+  // Not offered to admins or existing agents, who cannot apply. Guests are sent
+  // through sign-in first, with the return trip carried so they still reach the
+  // form afterwards.
+  const canApply = isAuthenticated && canApplyAsAgent(user?.roles);
+  const agentLink = isAuthenticated ? { to: '/apply-agent' } : { to: '/login', state: { from: '/apply-agent' } };
+
   return (
     <footer className="relative overflow-hidden bg-ink-900 text-ink-100">
       <div className="absolute inset-0 bg-grid opacity-[0.04]" aria-hidden="true" />
@@ -69,13 +79,21 @@ export function Footer() {
           <div className="lg:col-span-2">
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">Resources</h3>
             <ul className="mt-4 space-y-1 text-sm">
-              {resourceLinks.map((l) => (
-                <li key={l.label}>
-                  <Link to={l.to} className="inline-block py-1.5 text-ink-300 transition-colors hover:text-gold-400">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+              {resourceLinks.map((l) => {
+                const isAgentCta = l.to === '/apply-agent';
+                if (isAgentCta && !canApply) return null;
+                return (
+                  <li key={l.label}>
+                    <Link
+                      to={isAgentCta ? agentLink.to : l.to}
+                      state={isAgentCta ? agentLink.state : undefined}
+                      className="inline-block py-1.5 text-ink-300 transition-colors hover:text-gold-400"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

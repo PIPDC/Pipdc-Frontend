@@ -51,8 +51,12 @@ export const enquiryService = {
     const { data } = await api.get<Paginated<Enquiry>>(`/enquiries/property/${propertyId}`, { params });
     return data;
   },
-  async notifyAgent(id: number): Promise<AgentNotifyResult> {
-    const { data } = await api.post<AgentNotifyResult>(`/enquiries/${id}/notify-agent`);
+  async notifyAgent(id: number, idempotencyKey?: string): Promise<AgentNotifyResult> {
+    // The endpoint carries [Idempotent], which rejects the request outright when
+    // the key is missing. Every call site has to supply one; see useNotifyAgent.
+    const { data } = await api.post<AgentNotifyResult>(`/enquiries/${id}/notify-agent`, undefined, {
+      headers: { 'Idempotency-Key': idempotencyKey ?? crypto.randomUUID() },
+    });
     return data;
   },
   async update(id: number, payload: { fullName: string; email: string; phone?: string | null; message: string; status: string }): Promise<Enquiry> {

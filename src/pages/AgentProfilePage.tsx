@@ -7,6 +7,7 @@ import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { PropertyCard } from '../components/property/PropertyCard';
+import { AgentFeedbackPanel } from '../components/agent/AgentFeedbackPanel';
 import { EmptyState } from '../components/ui/EmptyState';
 
 export function AgentProfilePage() {
@@ -97,6 +98,8 @@ export function AgentProfilePage() {
             <p className="mt-3 text-sm leading-relaxed text-ink-600">{agent.bio}</p>
           </div>
         )}
+
+        <AgentFeedbackPanel agent={agent} />
 
         <div className="mt-12">
           <h2 className="font-display text-2xl font-bold text-ink-900">

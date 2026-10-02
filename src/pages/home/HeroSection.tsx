@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Building2, ShieldCheck, Star } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { SearchFilterCard } from '../../components/property/SearchFilter';
+import { useAuth } from '../../contexts/AuthContext';
+import { canApplyAsAgent } from '../../utils/roles';
 import type { PropertyFilters } from '../../types';
 
 interface HeroSectionProps {
@@ -12,6 +14,15 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionProps) {
+  const { user, isAuthenticated } = useAuth();
+
+  // Signed-in non-staff users go straight to the form. Admins and existing
+  // agents cannot apply, so the button is not offered to them at all. Guests are
+  // sent to sign in first, carrying the return trip, and the login page offers
+  // account creation from there.
+  const canApply = isAuthenticated && canApplyAsAgent(user?.roles);
+  const applyLink = isAuthenticated ? { to: '/apply-agent' } : { to: '/login', state: { from: '/apply-agent' } };
+
   return (
     <section className="relative isolate overflow-hidden">
       <div className="absolute inset-0 -z-10">
@@ -65,11 +76,13 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
                 View Properties
               </Button>
             </Link>
-            <Link to="/register">
-              <Button variant="outline" size="lg" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white" leftIcon={<Building2 className="h-4 w-4" />}>
-                Become an Agent
-              </Button>
-            </Link>
+            {canApply && (
+              <Link to={applyLink.to} state={applyLink.state}>
+                <Button variant="outline" size="lg" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white" leftIcon={<Building2 className="h-4 w-4" />}>
+                  Become an Agent
+                </Button>
+              </Link>
+            )}
           </motion.div>
 
           <motion.div

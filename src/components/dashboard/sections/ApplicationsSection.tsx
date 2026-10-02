@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BadgeCheck, Eye, XCircle } from 'lucide-react';
+import { BadgeCheck, Ban, Eye, XCircle } from 'lucide-react';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Modal } from '../../ui/Modal';
@@ -10,6 +10,7 @@ import { formatDate } from '../../../utils/format';
 import {
   useAgentApplicationsForReview,
   useApproveAgentApplication,
+  useBlockAgentApplication,
   useRejectAgentApplication,
   useStartReview,
 } from '../../../hooks/useAgentApplications';
@@ -27,6 +28,7 @@ const FILTERS: { label: string; value: AgentApplicationStatus | undefined }[] = 
   { label: 'Under review', value: 'UnderReview' },
   { label: 'Approved', value: 'Approved' },
   { label: 'Rejected', value: 'Rejected' },
+  { label: 'Revoked', value: 'Revoked' },
 ];
 
 const statusTone: Record<AgentApplicationStatus, 'warning' | 'info' | 'success' | 'danger'> = {
@@ -34,6 +36,7 @@ const statusTone: Record<AgentApplicationStatus, 'warning' | 'info' | 'success' 
   UnderReview: 'info',
   Approved: 'success',
   Rejected: 'danger',
+  Revoked: 'danger',
 };
 
 function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
@@ -52,17 +55,22 @@ export function ApplicationsSection() {
   const [viewing, setViewing] = useState<AgentApplicationReview | null>(null);
   const [rejecting, setRejecting] = useState<AgentApplicationReview | null>(null);
   const [reason, setReason] = useState('');
+  // A bar is a separate decision from a rejection, so it gets its own dialog
+  // rather than a checkbox bolted onto the reject form.
+  const [blocking, setBlocking] = useState<AgentApplicationReview | null>(null);
+  const [blockReason, setBlockReason] = useState('');
 
   const { notify } = useToast();
   const listQuery = useAgentApplicationsForReview({ page, pageSize: PAGE_SIZE, status });
   const startReview = useStartReview();
   const approve = useApproveAgentApplication();
   const reject = useRejectAgentApplication();
+  const block = useBlockAgentApplication();
 
   const applications = listQuery.data?.items ?? [];
   const totalCount = listQuery.data?.totalCount ?? 0;
 
-  const isPending = startReview.isPending || approve.isPending || reject.isPending;
+  const isPending = startReview.isPending || approve.isPending || reject.isPending || block.isPending;
 
   const handleStartReview = async (application: AgentApplicationReview) => {
     try {
@@ -100,6 +108,27 @@ export function ApplicationsSection() {
       setReason('');
     } catch (err) {
       notify({ type: 'error', title: 'Could not reject application', description: extractApiError(err) });
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!blocking) return;
+    if (blockReason.trim().length < 10) {
+      notify({ type: 'error', title: 'Reason required', description: 'Give a reason of at least 10 characters.' });
+      return;
+    }
+    try {
+      await block.mutateAsync({ id: blocking.id, reason: blockReason.trim() });
+      notify({
+        type: 'success',
+        title: 'Application rejected and account barred',
+        description:
+          'The application was rejected and the account is permanently barred from applying. Only an admin lifting the bar restores access.',
+      });
+      setBlocking(null);
+      setBlockReason('');
+    } catch (err) {
+      notify({ type: 'error', title: 'Could not bar the account', description: extractApiError(err) });
     }
   };
 
@@ -201,6 +230,18 @@ export function ApplicationsSection() {
                             >
                               <XCircle className="h-4 w-4" />
                             </button>
+                            <button
+                              type="button"
+                              title="Reject and permanently bar this account"
+                              disabled={isPending}
+                              onClick={() => {
+                                setBlocking(a);
+                                setBlockReason('');
+                              }}
+                              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                            >
+                              <Ban className="h-4 w-4" />
+                            </button>
                           </>
                         )}
                       </div>
@@ -230,9 +271,23 @@ export function ApplicationsSection() {
                 </p>
               )}
               <DetailRow label="Phone" value={viewing.phoneNumber} />
+              <DetailRow
+                label="Date of birth"
+                value={viewing.dateOfBirth ? formatDate(viewing.dateOfBirth) : null}
+              />
               <DetailRow label="State of origin" value={viewing.stateOfOrigin} />
               <DetailRow label="Local government area" value={viewing.localGovernmentArea} />
               <DetailRow label="Residential address" value={viewing.residentialAddress} />
+              {/* Unmasked deliberately: the reviewer cannot vet identity without it. */}
+              <DetailRow label="Government ID number" value={viewing.nationalIdentityNumber} />
+              <DetailRow
+                label="Years of experience"
+                value={
+                  viewing.yearsOfExperience != null
+                    ? `${viewing.yearsOfExperience} year${viewing.yearsOfExperience === 1 ? '' : 's'}`
+                    : null
+                }
+              />
               <DetailRow label="Agency" value={viewing.agencyName} />
               <DetailRow label="Submitted" value={formatDate(viewing.createdAt)} />
               <DetailRow label="Reviewed" value={viewing.reviewedAt ? formatDate(viewing.reviewedAt) : null} />
@@ -256,6 +311,18 @@ export function ApplicationsSection() {
               </div>
             )}
 
+            {viewing.revocationReason && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Revocation reason</p>
+                <p className="mt-1 whitespace-pre-wrap rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+                  {viewing.revocationReason}
+                </p>
+                {viewing.revokedAt && (
+                  <p className="mt-1 text-xs text-ink-400">Revoked on {formatDate(viewing.revokedAt)}.</p>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
               <Button variant="ghost" onClick={() => setViewing(null)}>
                 Close
@@ -271,6 +338,17 @@ export function ApplicationsSection() {
                     }}
                   >
                     Reject
+                  </Button>
+                  <Button
+                    variant="danger"
+                    disabled={isPending}
+                    onClick={() => {
+                      setBlocking(viewing);
+                      setBlockReason('');
+                      setViewing(null);
+                    }}
+                  >
+                    Reject and bar
                   </Button>
                   <Button
                     variant="primary"
@@ -310,6 +388,52 @@ export function ApplicationsSection() {
             </Button>
             <Button variant="danger" loading={reject.isPending} onClick={handleReject}>
               Reject application
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/*
+        Rejecting and barring are one action here but two consequences: the
+        application is refused, and the account loses the ability to apply at all
+        until an admin lifts it. Spelled out because the bar outlives the form
+        and the applicant will be told about both.
+      */}
+      <Modal
+        open={Boolean(blocking)}
+        onClose={() => setBlocking(null)}
+        title="Reject and bar this applicant"
+        description="This is permanent. The bar is only lifted by an administrator."
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-lg bg-red-50 px-4 py-3">
+            <Ban className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <p className="text-sm text-red-800">
+              <span className="font-medium">{blocking?.fullName}</span>&apos;s application will be rejected and their
+              account permanently barred from applying as an agent. The apply form will be hidden from them, and the bar
+              can only be lifted by an administrator lifting it explicitly.
+            </p>
+          </div>
+          <Textarea
+            label="Reason for rejection and the bar *"
+            rows={4}
+            placeholder="e.g. Agency registration could not be verified, and the submitted documents were not genuine."
+            value={blockReason}
+            onChange={(e) => setBlockReason(e.target.value)}
+            hint={`${blockReason.trim().length}/1000 characters. Emailed to the applicant.`}
+          />
+          <div className="flex justify-end gap-2 border-t border-ink-100 pt-4">
+            <Button variant="ghost" onClick={() => setBlocking(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={block.isPending}
+              onClick={handleBlock}
+              disabled={blockReason.trim().length < 10}
+            >
+              Reject and bar permanently
             </Button>
           </div>
         </div>

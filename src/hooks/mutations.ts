@@ -107,9 +107,17 @@ export function useUpdateAgent() {
   });
 }
 
+/**
+ * Revokes an agent registration. Requires a reason and an optional successor
+ * agent, so the mutation signature carries both rather than just an id.
+ */
 export function useDeleteAgent() {
   const invalidate = useInvalidate([['agents'], ['users'], ['dashboard']]);
-  return useMutation({ mutationFn: (id: number) => agentService.remove(id), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: ({ id, reason, reassignToAgentId }: { id: number; reason: string; reassignToAgentId?: number | null }) =>
+      agentService.remove(id, { reason, reassignToAgentId }),
+    onSuccess: invalidate,
+  });
 }
 
 export function useUpdateEnquiry() {
@@ -130,8 +138,14 @@ export function useDeleteEnquiry() {
 
 export function useNotifyAgent() {
   const invalidate = useInvalidate([['enquiries'], ['dashboard']]);
+  // The backend endpoint is [Idempotent] and rejects a missing key with
+  // "idempotency.missingkey", which is why this button previously always failed.
+  // The key is generated inside the service per call; a retry of the same
+  // enquiry therefore re-mails, so the caller-facing contract stays simple.
   return useMutation({ mutationFn: (id: number) => enquiryService.notifyAgent(id), onSuccess: invalidate });
 }
+
+
 
 export function useCreateBlogPost() {
   const invalidate = useInvalidate([['blog']]);
@@ -195,14 +209,6 @@ export function useAddRole() {
   });
 }
 
-export function useRemoveRole() {
-  const invalidate = useInvalidate([['users'], ['agents'], ['dashboard']]);
-  return useMutation({
-    mutationFn: (payload: { email: string; role: string }) => authService.removeRole(payload),
-    onSuccess: invalidate,
-  });
-}
-
 export function useDeactivateUser() {
   const invalidate = useInvalidate([['users'], ['dashboard']]);
   return useMutation({
@@ -230,9 +236,17 @@ export function useToggleAgentVerification() {
 }
 
 export function useUpdateProfile() {
-  const invalidate = useInvalidate([['dashboard']]);
+  const invalidate = useInvalidate([['dashboard'], ['properties', 'nearby']]);
   return useMutation({
-    mutationFn: (payload: { firstName: string; lastName: string; phoneNumber?: string | null }) => authService.updateProfile(payload),
+    mutationFn: (payload: {
+      firstName: string;
+      lastName: string;
+      phoneNumber?: string | null;
+      /** Batch 5: omitted means "leave alone"; explicit null clears the area. */
+      locationId?: number | null;
+      latitude?: number | null;
+      longitude?: number | null;
+    }) => authService.updateProfile(payload),
     onSuccess: invalidate,
   });
 }

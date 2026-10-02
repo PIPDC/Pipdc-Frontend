@@ -83,8 +83,12 @@ export function LoginPage() {
                 variant="primary"
                 size="md"
                 className="mt-3"
-                onClick={() => navigate(`/verify-email?email=${encodeURIComponent(unconfirmedEmail)}`)}
-              >
+                onClick={() =>
+                  navigate(`/verify-email?email=${encodeURIComponent(unconfirmedEmail)}`, {
+                    state: pendingFrom ? { from: pendingFrom } : undefined,
+                  })
+                }
+                >
                 Verify my email
               </Button>
             </div>

@@ -9,7 +9,7 @@ import { propertyStatusLabel, listingTypeLabel } from '../../utils/propertyStatu
 
 interface PropertyCardProps {
   property: Property;
-  agentName?: string;
+  agentName?: string | null;
   isFavourite?: boolean;
   onToggleFavourite?: (id: number) => void;
   index?: number;

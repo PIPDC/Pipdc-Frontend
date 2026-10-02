@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../utils/cn';
 
-type Variant = 'primary' | 'gold' | 'outline' | 'ghost' | 'dark' | 'danger';
+type Variant = 'primary' | 'gold' | 'outline' | 'ghost' | 'dark' | 'danger' | 'nav-link';
 type Size = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -19,6 +19,16 @@ const variants: Record<Variant, string> = {
   ghost: 'text-ink-700 hover:bg-ink-100',
   dark: 'bg-ink-900 text-white hover:bg-ink-800 shadow-soft',
   danger: 'bg-red-600 text-white hover:bg-red-700',
+  // Navbar utility link. Sits on the glass header, so it is flat until hover,
+  // then a small white pill lifts. The size/gap/rounded utilities repeat what
+  // the 'md' size supplies because callers pass no size here; they are marked
+  // important so they win against the size record, which cn() cannot resolve
+  // (plain clsx, no tailwind-merge).
+  'nav-link':
+    '!h-auto !gap-1.5 !rounded-lg !border-0 !bg-transparent !px-3.5 !py-2 !text-sm !font-semibold ' +
+    '!text-ink-700 !shadow-none !transition-[background-color,box-shadow] !duration-150 !ease-out ' +
+    'hover:!bg-white hover:!text-ink-800 hover:!shadow-[0_2px_8px_rgba(0,0,0,0.08)] ' +
+    'focus-visible:!bg-white focus-visible:!text-ink-800',
 };
 
 const sizes: Record<Size, string> = {

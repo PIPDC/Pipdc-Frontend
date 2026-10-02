@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+﻿import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { ToastProvider } from './components/ui/Toast';
@@ -112,12 +112,37 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: 'reports',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="reports" />
+          </AdminGuard>
+        ),
+      },
+      {
         path: 'applications',
         element: (
           <AdminGuard>
             <DashboardSectionPage section="applications" />
           </AdminGuard>
         ),
+      },
+      {
+        // Appeals and standing bars. Admin-only for the same reason as the
+        // application queue: the decisions here restore access or refuse it.
+        path: 'appeals',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="appeals" />
+          </AdminGuard>
+        ),
+      },
+      {
+        // The applicant's own application. Not role-guarded: it is only ever
+        // visible to the signed-in applicant, and the service scopes the read to
+        // the caller. The sidebar only links here once an application exists.
+        path: 'my-agent-application',
+        element: <DashboardSectionPage section="my-agent-application" />,
       },
       {
         path: 'locations',
@@ -138,6 +163,10 @@ const router = createBrowserRouter([
       {
         path: 'my-enquiries',
         element: <DashboardSectionPage section="my-enquiries" />,
+      },
+      {
+        path: 'my-reports',
+        element: <DashboardSectionPage section="my-reports" />,
       },
       {
         path: 'messages',
