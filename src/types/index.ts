@@ -250,6 +250,7 @@ export interface ConversationClient {
 
 export interface ConversationAgent {
   agentId: number | null;
+  userId: string | null;
   fullName: string;
   agencyName: string;
   photoUrl: string | null;
@@ -272,7 +273,28 @@ export interface Conversation {
   unreadCount: number;
   createdAt: string;
   updatedAt: string | null;
+
+  // Batch 6: escalation state. These arrive on every conversation, so a client
+  // can render the right banner without a second request. The escalation fields
+  // stay null for the ordinary case, where nobody has escalated anything.
+  escalationStatus: ConversationEscalationStatus;
+  escalationReason: string | null;
+  escalatedAt: string | null;
+  escalatedByName: string | null;
+  assignedAdminId: string | null;
+  assignedAdminName: string | null;
+  assignedAt: string | null;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
 }
+
+/**
+ * Batch 6. `Active` is an ordinary agent/client thread. `Escalated` means an
+ * agent has handed it to PIPDC and nobody has picked it up yet. `Assigned` means
+ * an administrator owns it, and the original agent is read-only from then on.
+ * `Resolved` keeps the thread and its history but closes the case.
+ */
+export type ConversationEscalationStatus = 'Active' | 'Escalated' | 'Assigned' | 'Resolved';
 
 export interface Message {
   id: number;
@@ -457,4 +479,147 @@ export interface AiChatSession {
 export interface SendAiMessageResponse {
   session: AiChatSession;
   assistantMessage: AiChatMessage;
+}
+
+// ============================================================
+// Batch 7: recorded property transactions
+// ============================================================
+
+/** Mirrors the backend `TransactionStatus`. A sale and a lease share the vocabulary. */
+export type TransactionStatus = 'Pending' | 'Active' | 'Completed' | 'Terminated' | 'Cancelled';
+
+export type TransactionKind = 'Sale' | 'Lease';
+
+export interface Transaction {
+  id: number;
+  kind: TransactionKind;
+  status: TransactionStatus;
+  statusLabel: string;
+
+  propertyId: number;
+  propertyTitle: string;
+  propertySlug: string;
+  propertyCity: string;
+  propertyState: string;
+  currency: string;
+
+  /** The enquiry that produced this deal, when it is known. Null for a direct sale. */
+  enquiryId: number | null;
+  enquiryDate: string | null;
+
+  // Sale-only fields. Null on a lease, and vice versa below.
+  salePrice: number | null;
+  saleDate: string | null;
+  buyerName: string | null;
+  buyerContact: string | null;
+
+  leaseStartDate: string | null;
+  leaseEndDate: string | null;
+  monthlyRent: number | null;
+  tenantName: string | null;
+  tenantContact: string | null;
+
+  /** Registered account of the buyer/tenant, derived server-side from the enquiry. */
+  counterpartyUserId: string | null;
+  recordedByUserId: string;
+  recordedByName: string;
+  createdAt: string;
+  notes: string | null;
+}
+
+/** Body for `POST /transactions/properties/{id}/sales`. Carries no user ids. */
+export interface RecordSalePayload {
+  salePrice: number;
+  saleDate: string;
+  buyerName: string;
+  buyerContact: string;
+  notes?: string | null;
+  status?: TransactionStatus;
+  enquiryId?: number | null;
+}
+
+/** Body for `POST /transactions/properties/{id}/leases`. Carries no user ids. */
+export interface RecordLeasePayload {
+  tenantName: string;
+  tenantContact: string;
+  monthlyRent: number;
+  leaseStartDate: string;
+  leaseEndDate: string;
+  notes?: string | null;
+  status?: TransactionStatus;
+  enquiryId?: number | null;
+}
+
+export interface TransactionFilters {
+  kind?: TransactionKind | '';
+  status?: TransactionStatus | '';
+  propertyId?: number;
+  enquiryId?: number;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface TransactionTotals {
+  saleCount: number;
+  leaseCount: number;
+  totalSaleValue: number;
+  totalMonthlyRent: number;
+  totalLeaseTermValue: number;
+  activeLeaseCount: number;
+  propertiesSold: number;
+  propertiesRented: number;
+  averageSalePrice: number;
+}
+
+export interface TransactionTrendPoint {
+  month: string;
+  label: string;
+  count: number;
+  value: number;
+}
+
+export interface BreakdownPoint {
+  label: string;
+  count: number;
+  value: number;
+  /** 0-100, computed server-side against the largest value in the set. */
+  percentage: number;
+}
+
+export interface PropertyPerformance {
+  propertyId: number;
+  title: string;
+  slug: string;
+  city: string;
+  currency: string;
+  kind: TransactionKind;
+  value: number;
+  occurredAt: string | null;
+}
+
+export interface EnquiryToDealFunnel {
+  enquiryCount: number;
+  enquiriesLinkedToDeals: number;
+  enquiriesStillOpen: number;
+  /**
+   * Null when there were no enquiries to divide by. Rendered as an explicit
+   * "no data" state, never as 0%, because zero out of zero is not a measurement.
+   */
+  conversionRate: number | null;
+}
+
+export interface TransactionAnalytics {
+  generatedAt: string;
+  currency: string;
+  totals: TransactionTotals;
+  monthlySales: TransactionTrendPoint[];
+  monthlyDeals: TransactionTrendPoint[];
+  byStatus: BreakdownPoint[];
+  byCity: BreakdownPoint[];
+  topProperties: PropertyPerformance[];
+  enquiryToDealFunnel: EnquiryToDealFunnel;
+  /** Distinguishes "no deals ever" from "no deals in this window". */
+  hasAnyTransactions: boolean;
 }

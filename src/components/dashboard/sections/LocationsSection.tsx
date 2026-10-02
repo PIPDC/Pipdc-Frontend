@@ -238,28 +238,30 @@ export function LocationsSection() {
         ) : states.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[700px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Name</th>
-                <th className={thClass}>Type</th>
-                <th className={thClass}>Cities</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {states.map((s) => (
-                <StateRow
-                  key={s.id}
-                  state={s}
-                  expanded={expandedStateId === s.id}
-                  onToggle={() => setExpandedStateId(expandedStateId === s.id ? null : s.id)}
-                  onAddCity={() => openAddChild('State', s.id)}
-                  onDelete={setDeleting}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Name</th>
+                  <th className={thClass}>Type</th>
+                  <th className={thClass}>Cities</th>
+                  <th className={thClass}></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {states.map((s) => (
+                  <StateRow
+                    key={s.id}
+                    state={s}
+                    expanded={expandedStateId === s.id}
+                    onToggle={() => setExpandedStateId(expandedStateId === s.id ? null : s.id)}
+                    onAddCity={() => openAddChild('State', s.id)}
+                    onDelete={setDeleting}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </CardTable>
 

@@ -38,4 +38,38 @@ export const conversationService = {
   getStateByEnquiry,
   resolveEnquiryForProperty,
   getConversationForEnquiry,
+
+  // ------------------------------------------------------------
+  // Batch 6: handing a conversation to PIPDC
+  // ------------------------------------------------------------
+  // Escalation is a change of ownership on the same thread, not a new conversation,
+  // so these live beside the existing conversation calls and never move history.
+
+  /** Admin-only queue of escalated, claimed, and resolved conversations. */
+  async listEscalations(params?: Record<string, unknown>): Promise<Paginated<Conversation>> {
+    const { data } = await api.get<Paginated<Conversation>>('/conversations/escalations', { params });
+    return data;
+  },
+
+  /**
+   * The handling agent hands the conversation to PIPDC. The reason is required
+   * server-side, because it is what an administrator reads to decide whether to
+   * claim the case.
+   */
+  async escalate(conversationId: number, reason: string): Promise<Conversation> {
+    const { data } = await api.post<Conversation>(`/conversations/${conversationId}/escalate`, { reason });
+    return data;
+  },
+
+  /** An administrator takes ownership. Only the claimant may reply afterwards. */
+  async claim(conversationId: number): Promise<Conversation> {
+    const { data } = await api.post<Conversation>(`/conversations/${conversationId}/claim`);
+    return data;
+  },
+
+  /** The owning administrator closes the case. The thread and its history remain. */
+  async resolve(conversationId: number): Promise<Conversation> {
+    const { data } = await api.post<Conversation>(`/conversations/${conversationId}/resolve`);
+    return data;
+  },
 };

@@ -100,94 +100,96 @@ export function AgentEnquiriesSection({ title }: { title: string }) {
         ) : enquiries.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[980px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Client</th>
-                <th className={thClass}>Phone</th>
-                <th className={thClass}>Message</th>
-                <th className={thClass}>Property</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Date</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {enquiries.map((e) => {
-                const draft = draftStatus[e.id];
-                return (
-                  <tr key={e.id} className={cn('transition-colors hover:bg-ink-50/60', !e.isRead && 'bg-gold-50/40')}>
-                    <td className={tdClass}>
-                      <span className="flex items-center gap-2 font-medium text-ink-900">
-                        {e.fullName}
-                        {!e.isRead && <Badge tone="danger">New</Badge>}
-                      </span>
-                      <span className="block text-xs text-ink-400">{e.email}</span>
-                    </td>
-                    <td className={tdClass}>
-                      <span className="text-ink-600">{e.phone || <span className="italic text-ink-400">Not provided</span>}</span>
-                    </td>
-                    <td className={tdClass}>
-                      <span className="line-clamp-1 max-w-[220px] text-ink-600">{e.message}</span>
-                    </td>
-                    <td className={tdClass}>
-                      <Link to={`/properties/${e.propertySlug}`} className="font-medium text-forest-600 hover:text-forest-700">
-                        {e.propertyTitle}
-                      </Link>
-                    </td>
-                    <td className={tdClass}>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={draft ?? e.status}
-                          onChange={(ev) => setDraftStatus((prev) => ({ ...prev, [e.id]: ev.target.value as EnquiryStatus }))}
-                          className="h-9 rounded-lg border border-ink-200 bg-white px-2 text-sm text-ink-700 focus:border-forest-500 focus:outline-none"
-                        >
-                          {ENQUIRY_STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>{enquiryStatusLabel(s)}</option>
-                          ))}
-                        </select>
-                        {draft && draft !== e.status && (
-                          <Button variant="primary" size="sm" loading={updateEnquiry.isPending} onClick={() => saveStatus(e)}>
-                            Save
-                          </Button>
-                        )}
-                        {!draft && <Badge tone={enquiryStatusTone(e.status)}>{enquiryStatusLabel(e.status)}</Badge>}
-                      </div>
-                    </td>
-                    <td className={tdClass}>{timeAgo(e.createdAt)}</td>
-                    <td className={tdClass}>
-                      <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => openEnquiry(e)}
-                          title="View details"
-                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <Link
-                          to={`/properties/${e.propertySlug}`}
-                          title="View property"
-                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                        >
-                          <ExternalLink className="h-4 w-4" />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Client</th>
+                  <th className={thClass}>Phone</th>
+                  <th className={thClass}>Message</th>
+                  <th className={thClass}>Property</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Date</th>
+                  <th className={thClass}></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {enquiries.map((e) => {
+                  const draft = draftStatus[e.id];
+                  return (
+                    <tr key={e.id} className={cn('transition-colors hover:bg-ink-50/60', !e.isRead && 'bg-gold-50/40')}>
+                      <td className={tdClass}>
+                        <span className="flex items-center gap-2 font-medium text-ink-900">
+                          {e.fullName}
+                          {!e.isRead && <Badge tone="danger">New</Badge>}
+                        </span>
+                        <span className="block text-xs text-ink-400">{e.email}</span>
+                      </td>
+                      <td className={tdClass}>
+                        <span className="text-ink-600">{e.phone || <span className="italic text-ink-400">Not provided</span>}</span>
+                      </td>
+                      <td className={tdClass}>
+                        <span className="line-clamp-1 max-w-[220px] text-ink-600">{e.message}</span>
+                      </td>
+                      <td className={tdClass}>
+                        <Link to={`/properties/${e.propertySlug}`} className="font-medium text-forest-600 hover:text-forest-700">
+                          {e.propertyTitle}
                         </Link>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/dashboard/messages?enquiry=${e.id}`)}
-                          title="Open conversation"
-                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                        >
-                          <MessagesSquare className="h-4 w-4" />
-                        </button>
-                        <RowActions onDelete={() => setDeleting(e)} />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className={tdClass}>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={draft ?? e.status}
+                            onChange={(ev) => setDraftStatus((prev) => ({ ...prev, [e.id]: ev.target.value as EnquiryStatus }))}
+                            className="h-9 rounded-lg border border-ink-200 bg-white px-2 text-sm text-ink-700 focus:border-forest-500 focus:outline-none"
+                          >
+                            {ENQUIRY_STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>{enquiryStatusLabel(s)}</option>
+                            ))}
+                          </select>
+                          {draft && draft !== e.status && (
+                            <Button variant="primary" size="sm" loading={updateEnquiry.isPending} onClick={() => saveStatus(e)}>
+                              Save
+                            </Button>
+                          )}
+                          {!draft && <Badge tone={enquiryStatusTone(e.status)}>{enquiryStatusLabel(e.status)}</Badge>}
+                        </div>
+                      </td>
+                      <td className={tdClass}>{timeAgo(e.createdAt)}</td>
+                      <td className={tdClass}>
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openEnquiry(e)}
+                            title="View details"
+                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <Link
+                            to={`/properties/${e.propertySlug}`}
+                            title="View property"
+                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/dashboard/messages?enquiry=${e.id}`)}
+                            title="Open conversation"
+                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                          >
+                            <MessagesSquare className="h-4 w-4" />
+                          </button>
+                          <RowActions onDelete={() => setDeleting(e)} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>
@@ -218,7 +220,7 @@ export function AgentEnquiriesSection({ title }: { title: string }) {
               <span>Submitted {formatDate(viewing.createdAt)}</span>
               <span className="flex items-center gap-2">
                 {viewing.isRead ? (
-                  <span>Read {viewing.agentReadAt ? `· ${formatDate(viewing.agentReadAt)}` : ''}</span>
+                  <span>Read {viewing.agentReadAt ? `Â· ${formatDate(viewing.agentReadAt)}` : ''}</span>
                 ) : (
                   <Badge tone="danger">Unread</Badge>
                 )}

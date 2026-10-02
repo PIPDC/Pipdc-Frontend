@@ -95,6 +95,18 @@ export function useAgentApplicationsForReview(params: {
 }
 
 /**
+ * One application for the dedicated review page. Fetched by id so the page is a
+ * real URL: it survives a refresh and can be linked to, which a modal cannot do.
+ */
+export function useAgentApplicationForReview(id: number | undefined) {
+  return useQuery({
+    queryKey: [...AGENT_APPLICATIONS_KEY, 'review', 'detail', id],
+    queryFn: () => agentApplicationService.getForReview(id as number),
+    enabled: id != null,
+  });
+}
+
+/**
  * Shared invalidation for every review transition, since all of them change what
  * the admin list and the applicant's own view should show.
  */

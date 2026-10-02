@@ -84,60 +84,62 @@ export function BlogSection() {
         ) : posts.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[840px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Title</th>
-                <th className={thClass}>Category</th>
-                <th className={thClass}>Tags</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Published</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {posts.map((post) => (
-                <tr key={post.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{post.title}</span>
-                    <span className="block text-xs text-ink-400">/{post.slug}</span>
-                  </td>
-                  <td className={tdClass}>
-                    {post.categoryName ? <Badge tone="forest">{post.categoryName}</Badge> : <span className="text-xs text-ink-300">—</span>}
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex flex-wrap gap-1">
-                      {post.tags.length > 0 ? post.tags.map((tag) => (
-                        <Badge key={tag.id} tone="neutral">{tag.name}</Badge>
-                      )) : <span className="text-xs text-ink-300">—</span>}
-                    </div>
-                  </td>
-                  <td className={tdClass}>
-                    <Badge tone={post.status === 'Published' ? 'forest' : post.status === 'Draft' ? 'gold' : 'neutral'}>{post.status}</Badge>
-                  </td>
-                  <td className={tdClass}>{post.publishedAt ? formatDate(post.publishedAt) : '—'}</td>
-                  <td className={tdClass}>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        loading={publishPost.isPending || unpublishPost.isPending}
-                        onClick={() => togglePublish(post)}
-                        leftIcon={post.status === 'Published' ? <EyeOff className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
-                      >
-                        {post.status === 'Published' ? 'Unpublish' : 'Publish'}
-                      </Button>
-                      <RowActions
-                        viewUrl={`/blog/${post.slug}`}
-                        onEdit={() => { setEditing(post); setFormOpen(true); }}
-                        onDelete={() => setDeleting(post)}
-                      />
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[840px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Title</th>
+                  <th className={thClass}>Category</th>
+                  <th className={thClass}>Tags</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Published</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {posts.map((post) => (
+                  <tr key={post.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{post.title}</span>
+                      <span className="block text-xs text-ink-400">/{post.slug}</span>
+                    </td>
+                    <td className={tdClass}>
+                      {post.categoryName ? <Badge tone="forest">{post.categoryName}</Badge> : <span className="text-xs text-ink-300">â€”</span>}
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex flex-wrap gap-1">
+                        {post.tags.length > 0 ? post.tags.map((tag) => (
+                          <Badge key={tag.id} tone="neutral">{tag.name}</Badge>
+                        )) : <span className="text-xs text-ink-300">â€”</span>}
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <Badge tone={post.status === 'Published' ? 'forest' : post.status === 'Draft' ? 'gold' : 'neutral'}>{post.status}</Badge>
+                    </td>
+                    <td className={tdClass}>{post.publishedAt ? formatDate(post.publishedAt) : 'â€”'}</td>
+                    <td className={tdClass}>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          loading={publishPost.isPending || unpublishPost.isPending}
+                          onClick={() => togglePublish(post)}
+                          leftIcon={post.status === 'Published' ? <EyeOff className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                        >
+                          {post.status === 'Published' ? 'Unpublish' : 'Publish'}
+                        </Button>
+                        <RowActions
+                          viewUrl={`/blog/${post.slug}`}
+                          onEdit={() => { setEditing(post); setFormOpen(true); }}
+                          onDelete={() => setDeleting(post)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>

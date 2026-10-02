@@ -155,6 +155,11 @@ export const agentApplicationService = {
     return data;
   },
 
+  async getForReview(id: number): Promise<AgentApplicationReview> {
+    const { data } = await api.get<AgentApplicationReview>(`/agent-applications/${id}`);
+    return data;
+  },
+
   async startReview(id: number): Promise<AgentApplicationReview> {
     const { data } = await api.post<AgentApplicationReview>(`/agent-applications/${id}/start-review`);
     return data;
