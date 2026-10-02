@@ -171,90 +171,92 @@ export function PropertiesSection() {
         ) : properties.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[900px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Title</th>
-                {isAdmin && <th className={thClass}>Agent</th>}
-                <th className={thClass}>Price</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Enquiries</th>
-                {isAdmin && <th className={thClass}>Featured</th>}
-                <th className={thClass}>Listed</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {properties.map((p) => (
-                <tr key={p.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{p.title}</span>
-                    <span className="block text-xs text-ink-400">{p.address}, {p.city}</span>
-                  </td>
-                  {isAdmin && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Title</th>
+                  {isAdmin && <th className={thClass}>Agent</th>}
+                  <th className={thClass}>Price</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Enquiries</th>
+                  {isAdmin && <th className={thClass}>Featured</th>}
+                  <th className={thClass}>Listed</th>
+                  <th className={thClass}></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {properties.map((p) => (
+                  <tr key={p.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{p.title}</span>
+                      <span className="block text-xs text-ink-400">{p.address}, {p.city}</span>
+                    </td>
+                    {isAdmin && (
+                      <td className={tdClass}>
+                        <select
+                          value={p.agentId ?? ''}
+                          onChange={(e) => handleAgentChange(p, e.target.value)}
+                          className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-700 transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40"
+                        >
+                          <option value="">Unassigned</option>
+                          {agents.map((a) => (
+                            <option key={a.id} value={a.id}>{a.fullName}</option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    <td className={tdClass}>{formatPrice(p.price, p.currency)}</td>
                     <td className={tdClass}>
                       <select
-                        value={p.agentId ?? ''}
-                        onChange={(e) => handleAgentChange(p, e.target.value)}
-                        className="rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs text-ink-700 transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40"
+                        value={p.status}
+                        onChange={(e) => handleStatusChange(p, e.target.value)}
+                        className={cn(
+                          'rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs font-medium transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40',
+                          `text-${statusTone[p.status] ?? 'neutral'}-700`,
+                        )}
                       >
-                        <option value="">Unassigned</option>
-                        {agents.map((a) => (
-                          <option key={a.id} value={a.id}>{a.fullName}</option>
+                        {PROPERTY_STATUSES.map((s) => (
+                          <option key={s} value={s}>{propertyStatusLabel(s)}</option>
                         ))}
                       </select>
                     </td>
-                  )}
-                  <td className={tdClass}>{formatPrice(p.price, p.currency)}</td>
-                  <td className={tdClass}>
-                    <select
-                      value={p.status}
-                      onChange={(e) => handleStatusChange(p, e.target.value)}
-                      className={cn(
-                        'rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs font-medium transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40',
-                        `text-${statusTone[p.status] ?? 'neutral'}-700`,
-                      )}
-                    >
-                      {PROPERTY_STATUSES.map((s) => (
-                        <option key={s} value={s}>{propertyStatusLabel(s)}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className={tdClass}>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
-                      <MessageSquare className="h-3 w-3 text-forest-500" />
-                      {p.enquiryCount}
-                    </span>
-                  </td>
-                  {isAdmin && (
                     <td className={tdClass}>
-                      <button
-                        type="button"
-                        onClick={() => toggleFeatured(p)}
-                        disabled={togglingId === p.id}
-                        title={p.featured ? 'Remove from home page' : 'Feature on home page'}
-                        className={cn(
-                          'rounded-lg p-1.5 transition-colors',
-                          p.featured ? 'text-gold-500 hover:text-gold-600' : 'text-ink-300 hover:text-gold-500',
-                          togglingId === p.id && 'animate-pulse',
-                        )}
-                      >
-                        <Star className={cn('h-5 w-5', p.featured && 'fill-gold-500')} />
-                      </button>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
+                        <MessageSquare className="h-3 w-3 text-forest-500" />
+                        {p.enquiryCount}
+                      </span>
                     </td>
-                  )}
-                  <td className={tdClass}>{timeAgo(p.createdAt)}</td>
-                  <td className={tdClass}>
-                    <RowActions
-                      viewUrl={`/properties/${p.slug}`}
-                      onEdit={() => { setEditing(p); setFormOpen(true); }}
-                      onDelete={() => setDeleting(p)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {isAdmin && (
+                      <td className={tdClass}>
+                        <button
+                          type="button"
+                          onClick={() => toggleFeatured(p)}
+                          disabled={togglingId === p.id}
+                          title={p.featured ? 'Remove from home page' : 'Feature on home page'}
+                          className={cn(
+                            'rounded-lg p-1.5 transition-colors',
+                            p.featured ? 'text-gold-500 hover:text-gold-600' : 'text-ink-300 hover:text-gold-500',
+                            togglingId === p.id && 'animate-pulse',
+                          )}
+                        >
+                          <Star className={cn('h-5 w-5', p.featured && 'fill-gold-500')} />
+                        </button>
+                      </td>
+                    )}
+                    <td className={tdClass}>{timeAgo(p.createdAt)}</td>
+                    <td className={tdClass}>
+                      <RowActions
+                        viewUrl={`/properties/${p.slug}`}
+                        onEdit={() => { setEditing(p); setFormOpen(true); }}
+                        onDelete={() => setDeleting(p)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>

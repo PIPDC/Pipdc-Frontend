@@ -78,72 +78,74 @@ export function UsersSection() {
         ) : users.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[820px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>User</th>
-                <th className={thClass}>Roles</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Joined</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {users.map((u) => {
-                const isAgent = u.roles.includes('Agent');
-                const isAdmin = u.roles.includes('Admin');
-                return (
-                  <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
-                    <td className={tdClass}>
-                      <span className="font-medium text-ink-900">{u.fullName}{isSelf(u) && <span className="ml-1.5 text-xs text-ink-400">(you)</span>}</span>
-                      <span className="block text-xs text-ink-400">{u.email}</span>
-                    </td>
-                    <td className={tdClass}>
-                      <div className="flex flex-wrap gap-1.5">
-                        {u.roles.map((r) => (
-                          <Badge key={r} tone={r === 'Admin' ? 'forest' : r === 'Agent' ? 'gold' : 'neutral'}>{r}</Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className={tdClass}><Badge tone={u.status === 'Active' ? 'forest' : 'neutral'}>{u.status}</Badge></td>
-                    <td className={tdClass}>{formatDate(u.createdAt)}</td>
-                    <td className={tdClass}>
-                      <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                        <button
-                          type="button"
-                          title="View profile"
-                          onClick={() => setViewing(u)}
-                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {!isAdmin && !isAgent && !isSelf(u) && u.status === 'Active' && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>User</th>
+                  <th className={thClass}>Roles</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Joined</th>
+                  <th className={thClass}></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {users.map((u) => {
+                  const isAgent = u.roles.includes('Agent');
+                  const isAdmin = u.roles.includes('Admin');
+                  return (
+                    <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
+                      <td className={tdClass}>
+                        <span className="font-medium text-ink-900">{u.fullName}{isSelf(u) && <span className="ml-1.5 text-xs text-ink-400">(you)</span>}</span>
+                        <span className="block text-xs text-ink-400">{u.email}</span>
+                      </td>
+                      <td className={tdClass}>
+                        <div className="flex flex-wrap gap-1.5">
+                          {u.roles.map((r) => (
+                            <Badge key={r} tone={r === 'Admin' ? 'forest' : r === 'Agent' ? 'gold' : 'neutral'}>{r}</Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className={tdClass}><Badge tone={u.status === 'Active' ? 'forest' : 'neutral'}>{u.status}</Badge></td>
+                      <td className={tdClass}>{formatDate(u.createdAt)}</td>
+                      <td className={tdClass}>
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                           <button
                             type="button"
-                            title="Deactivate user"
-                            onClick={() => setDeactivating(u)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            title="View profile"
+                            onClick={() => setViewing(u)}
+                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
                           >
-                            <ShieldOff className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </button>
-                        )}
-                        {!isAdmin && !isSelf(u) && u.status === 'Suspended' && (
-                          <button
-                            type="button"
-                            title="Activate user"
-                            onClick={() => setActivating(u)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          {!isAdmin && !isAgent && !isSelf(u) && u.status === 'Active' && (
+                            <button
+                              type="button"
+                              title="Deactivate user"
+                              onClick={() => setDeactivating(u)}
+                              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            >
+                              <ShieldOff className="h-4 w-4" />
+                            </button>
+                          )}
+                          {!isAdmin && !isSelf(u) && u.status === 'Suspended' && (
+                            <button
+                              type="button"
+                              title="Activate user"
+                              onClick={() => setActivating(u)}
+                              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>
@@ -158,7 +160,7 @@ export function UsersSection() {
           </div>
         ) : detailQuery.data ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Full Name</p>
                 <p className="mt-1 text-sm text-ink-900">{detailQuery.data.fullName}</p>
@@ -169,7 +171,7 @@ export function UsersSection() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Phone</p>
-                <p className="mt-1 text-sm text-ink-900">{detailQuery.data.phoneNumber || '—'}</p>
+                <p className="mt-1 text-sm text-ink-900">{detailQuery.data.phoneNumber || 'â€”'}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Joined</p>
@@ -196,14 +198,14 @@ export function UsersSection() {
             {detailQuery.data.agentId && (
               <div className="rounded-lg bg-gold-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gold-600">Agent Profile</p>
-                <div className="mt-1.5 grid grid-cols-2 gap-2 text-sm">
+                <div className="mt-1.5 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                   <div>
                     <span className="text-gold-600">Agency:</span>{' '}
-                    <span className="text-gold-800">{detailQuery.data.agentAgencyName || '—'}</span>
+                    <span className="text-gold-800">{detailQuery.data.agentAgencyName || 'â€”'}</span>
                   </div>
                   <div>
                     <span className="text-gold-600">License:</span>{' '}
-                    <span className="text-gold-800">{detailQuery.data.agentLicenseNumber || '—'}</span>
+                    <span className="text-gold-800">{detailQuery.data.agentLicenseNumber || 'â€”'}</span>
                   </div>
                   <div>
                     <span className="text-gold-600">Verified:</span>{' '}

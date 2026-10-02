@@ -131,12 +131,12 @@ export function DevelopmentDetailPage() {
           </div>
           <div>
             <p className="text-xs font-medium text-ink-400">Developer</p>
-            <p className="mt-1 text-sm font-medium text-ink-700">{project.developer ?? '—'}</p>
+            <p className="mt-1 text-sm font-medium text-ink-700">{project.developer ?? 'â€”'}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-ink-400">Expected Completion</p>
             <p className="mt-1 text-sm font-medium text-ink-700">
-              {project.expectedCompletionDate ? formatDate(project.expectedCompletionDate) : '—'}
+              {project.expectedCompletionDate ? formatDate(project.expectedCompletionDate) : 'â€”'}
             </p>
           </div>
           <div>
@@ -160,39 +160,41 @@ export function DevelopmentDetailPage() {
         ) : units.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[680px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Identifier</th>
-                <th className={thClass}>Type</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Price</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {units.map((u) => (
-                <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{u.unitIdentifier}</span>
-                  </td>
-                  <td className={tdClass}>{u.unitType}</td>
-                  <td className={tdClass}>
-                    <Badge tone={unitStatusTone(u.status)}>{unitStatusLabel(u.status)}</Badge>
-                  </td>
-                  <td className={tdClass}>
-                    {u.price != null ? formatPrice(u.price, u.currency) : '—'}
-                  </td>
-                  <td className={tdClass}>
-                    <RowActions
-                      onEdit={() => { setEditingUnit(u); setUnitFormOpen(true); }}
-                      onDelete={() => setDeletingUnit(u)}
-                    />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Identifier</th>
+                  <th className={thClass}>Type</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Price</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {units.map((u) => (
+                  <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{u.unitIdentifier}</span>
+                    </td>
+                    <td className={tdClass}>{u.unitType}</td>
+                    <td className={tdClass}>
+                      <Badge tone={unitStatusTone(u.status)}>{unitStatusLabel(u.status)}</Badge>
+                    </td>
+                    <td className={tdClass}>
+                      {u.price != null ? formatPrice(u.price, u.currency) : 'â€”'}
+                    </td>
+                    <td className={tdClass}>
+                      <RowActions
+                        onEdit={() => { setEditingUnit(u); setUnitFormOpen(true); }}
+                        onDelete={() => setDeletingUnit(u)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </CardTable>
 
@@ -210,38 +212,40 @@ export function DevelopmentDetailPage() {
         ) : updates.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[600px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Title</th>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Progress</th>
-                <th className={thClass}>Images</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {updates.map((u) => (
-                <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{u.title}</span>
-                    <span className="block max-w-md truncate text-xs text-ink-400">{u.description}</span>
-                  </td>
-                  <td className={tdClass}>{formatDate(u.updateDate)}</td>
-                  <td className={tdClass}>
-                    {u.progressPercentage != null ? `${u.progressPercentage}%` : '—'}
-                  </td>
-                  <td className={tdClass}>{u.imageUrls.length}</td>
-                  <td className={tdClass}>
-                    <RowActions
-                      onEdit={() => { setEditingUpdate(u); setUpdateFormOpen(true); }}
-                      onDelete={() => setDeletingUpdate(u)}
-                    />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Title</th>
+                  <th className={thClass}>Date</th>
+                  <th className={thClass}>Progress</th>
+                  <th className={thClass}>Images</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {updates.map((u) => (
+                  <tr key={u.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{u.title}</span>
+                      <span className="block max-w-md truncate text-xs text-ink-400">{u.description}</span>
+                    </td>
+                    <td className={tdClass}>{formatDate(u.updateDate)}</td>
+                    <td className={tdClass}>
+                      {u.progressPercentage != null ? `${u.progressPercentage}%` : 'â€”'}
+                    </td>
+                    <td className={tdClass}>{u.imageUrls.length}</td>
+                    <td className={tdClass}>
+                      <RowActions
+                        onEdit={() => { setEditingUpdate(u); setUpdateFormOpen(true); }}
+                        onDelete={() => setDeletingUpdate(u)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </CardTable>
 

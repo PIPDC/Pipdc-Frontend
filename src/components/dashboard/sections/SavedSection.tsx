@@ -48,52 +48,54 @@ export function SavedSection() {
       ) : items.length === 0 ? (
         <TableEmpty />
       ) : (
-        <table className="w-full min-w-[780px] border-collapse">
-          <thead>
-            <tr className="border-b border-ink-100 bg-ink-50/60">
-              <th className={thClass}>Property</th>
-              <th className={thClass}>Price</th>
-              <th className={thClass}>Status</th>
-              <th className={thClass}>Saved</th>
-              <th className={thClass}></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-ink-50">
-            {items.map((sp) => (
-              <tr key={sp.property.id} className="transition-colors hover:bg-ink-50/60">
-                <td className={tdClass}>
-                  <span className="font-medium text-ink-900">{sp.property.title}</span>
-                  <span className="block text-xs text-ink-400">{sp.property.address}, {sp.property.city}</span>
-                </td>
-                <td className={tdClass}>{formatPrice(sp.property.price, sp.property.currency)}</td>
-                <td className={tdClass}><Badge tone={statusTone[sp.property.status] ?? 'neutral'}>{propertyStatusLabel(sp.property.status)}</Badge></td>
-                <td className={tdClass}>{timeAgo(sp.savedAt)}</td>
-                <td className={tdClass}>
-                  <div className="flex items-center justify-end gap-1.5">
-                    <RowActions viewUrl={`/properties/${sp.property.slug}`} />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEnquire(sp.property.slug)}
-                      leftIcon={<MessagesSquare className="h-3.5 w-3.5" />}
-                    >
-                      Enquire
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggle(sp.property.id)}
-                      leftIcon={<Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />}
-                      className="text-red-600"
-                    >
-                      Unsave
-                    </Button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[780px] border-collapse">
+            <thead>
+              <tr className="border-b border-ink-100 bg-ink-50/60">
+                <th className={thClass}>Property</th>
+                <th className={thClass}>Price</th>
+                <th className={thClass}>Status</th>
+                <th className={thClass}>Saved</th>
+                <th className={thClass}></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-ink-50">
+              {items.map((sp) => (
+                <tr key={sp.property.id} className="transition-colors hover:bg-ink-50/60">
+                  <td className={tdClass}>
+                    <span className="font-medium text-ink-900">{sp.property.title}</span>
+                    <span className="block text-xs text-ink-400">{sp.property.address}, {sp.property.city}</span>
+                  </td>
+                  <td className={tdClass}>{formatPrice(sp.property.price, sp.property.currency)}</td>
+                  <td className={tdClass}><Badge tone={statusTone[sp.property.status] ?? 'neutral'}>{propertyStatusLabel(sp.property.status)}</Badge></td>
+                  <td className={tdClass}>{timeAgo(sp.savedAt)}</td>
+                  <td className={tdClass}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <RowActions viewUrl={`/properties/${sp.property.slug}`} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEnquire(sp.property.slug)}
+                        leftIcon={<MessagesSquare className="h-3.5 w-3.5" />}
+                      >
+                        Enquire
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggle(sp.property.id)}
+                        leftIcon={<Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />}
+                        className="text-red-600"
+                      >
+                        Unsave
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
     </CardTable>

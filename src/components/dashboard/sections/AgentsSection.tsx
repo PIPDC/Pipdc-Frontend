@@ -170,109 +170,111 @@ export function AgentsSection() {
         ) : agents.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[820px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Agent</th>
-                <th className={thClass}>Agency</th>
-                <th className={thClass}>Phone</th>
-                <th className={thClass}>License</th>
-                <th className={thClass}>Properties</th>
-                <th className={thClass}>Rating</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {agents.map((a) => (
-                <tr key={a.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{a.fullName}</span>
-                    <span className="block text-xs text-ink-400">{a.email}</span>
-                  </td>
-                  <td className={tdClass}>{a.agency}</td>
-                  <td className={tdClass}>{a.phone || '—'}</td>
-                  <td className={tdClass}>{a.licenseNumber || '—'}</td>
-                  <td className={tdClass}>
-                    <Badge tone={a.propertyCount > 0 ? 'forest' : 'neutral'}>
-                      {a.propertyCount} {a.propertyCount === 1 ? 'property' : 'properties'}
-                    </Badge>
-                  </td>
-                  <td className={`${tdClass} whitespace-nowrap`}>
-                    {a.averageRating == null ? (
-                      <span className="text-xs text-ink-400">No reviews</span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-ink-700">
-                        <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-500" />
-                        <span className="font-medium">{a.averageRating.toFixed(1)}</span>
-                        <span className="text-xs text-ink-400">({a.reviewCount})</span>
-                      </span>
-                    )}
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex flex-col items-start gap-1">
-                      <Badge tone={a.verified ? 'forest' : 'neutral'}>{a.verified ? 'Verified' : 'Unverified'}</Badge>
-                      {suspendedAgentIds.has(a.id) && (
-                        <Badge tone="danger">Suspended</Badge>
-                      )}
-                      {removedAgentIds.has(a.id) && (
-                        <Badge tone="danger">Removed</Badge>
-                      )}
-                    </div>
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        title={a.verified ? 'Remove verification' : 'Verify agent'}
-                        onClick={() => setVerifying(a)}
-                        className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
-                      >
-                        {a.verified ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                      </button>
-                      <button
-                        type="button"
-                        title="View summary"
-                        onClick={() => setSummarizing(a)}
-                        className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                      {/* Suspension manages a live agent; removal revokes a
-                          registration. They are different decisions, so they get
-                          different controls and a removed agent is not offered
-                          either. */}
-                      {!removedAgentIds.has(a.id) &&
-                        (suspendedAgentIds.has(a.id) ? (
-                          <button
-                            type="button"
-                            title="Reinstate agent"
-                            onClick={() => setReinstating(a)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            title="Suspend agent"
-                            onClick={() => openSuspend(a)}
-                            className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <UserX className="h-4 w-4" />
-                          </button>
-                        ))}
-                      <RowActions
-                        viewUrl={`/agents/${a.id}`}
-                        onEdit={() => { setEditing(a); setFormOpen(true); }}
-                        onDelete={() => openRemoval(a)}
-                      />
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Agent</th>
+                  <th className={thClass}>Agency</th>
+                  <th className={thClass}>Phone</th>
+                  <th className={thClass}>License</th>
+                  <th className={thClass}>Properties</th>
+                  <th className={thClass}>Rating</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {agents.map((a) => (
+                  <tr key={a.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{a.fullName}</span>
+                      <span className="block text-xs text-ink-400">{a.email}</span>
+                    </td>
+                    <td className={tdClass}>{a.agency}</td>
+                    <td className={tdClass}>{a.phone || 'â€”'}</td>
+                    <td className={tdClass}>{a.licenseNumber || 'â€”'}</td>
+                    <td className={tdClass}>
+                      <Badge tone={a.propertyCount > 0 ? 'forest' : 'neutral'}>
+                        {a.propertyCount} {a.propertyCount === 1 ? 'property' : 'properties'}
+                      </Badge>
+                    </td>
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      {a.averageRating == null ? (
+                        <span className="text-xs text-ink-400">No reviews</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-ink-700">
+                          <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-500" />
+                          <span className="font-medium">{a.averageRating.toFixed(1)}</span>
+                          <span className="text-xs text-ink-400">({a.reviewCount})</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex flex-col items-start gap-1">
+                        <Badge tone={a.verified ? 'forest' : 'neutral'}>{a.verified ? 'Verified' : 'Unverified'}</Badge>
+                        {suspendedAgentIds.has(a.id) && (
+                          <Badge tone="danger">Suspended</Badge>
+                        )}
+                        {removedAgentIds.has(a.id) && (
+                          <Badge tone="danger">Removed</Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          title={a.verified ? 'Remove verification' : 'Verify agent'}
+                          onClick={() => setVerifying(a)}
+                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
+                        >
+                          {a.verified ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          title="View summary"
+                          onClick={() => setSummarizing(a)}
+                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                        </button>
+                        {/* Suspension manages a live agent; removal revokes a
+                            registration. They are different decisions, so they get
+                            different controls and a removed agent is not offered
+                            either. */}
+                        {!removedAgentIds.has(a.id) &&
+                          (suspendedAgentIds.has(a.id) ? (
+                            <button
+                              type="button"
+                              title="Reinstate agent"
+                              onClick={() => setReinstating(a)}
+                              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-forest-50 hover:text-forest-600"
+                            >
+                              <UserCheck className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Suspend agent"
+                              onClick={() => openSuspend(a)}
+                              className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            >
+                              <UserX className="h-4 w-4" />
+                            </button>
+                          ))}
+                        <RowActions
+                          viewUrl={`/agents/${a.id}`}
+                          onEdit={() => { setEditing(a); setFormOpen(true); }}
+                          onDelete={() => openRemoval(a)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>
@@ -341,7 +343,7 @@ export function AgentsSection() {
                 <option value="">Leave them with no agent</option>
                 {successorOptions.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.fullName} — {a.agency}
+                    {a.fullName} â€” {a.agency}
                   </option>
                 ))}
               </select>
@@ -369,7 +371,7 @@ export function AgentsSection() {
         )}
       </Modal>
 
-      {/* Suspend — needs a written reason, so a form rather than a confirm */}
+      {/* Suspend â€” needs a written reason, so a form rather than a confirm */}
       <Modal open={Boolean(suspending)} onClose={() => setSuspending(null)} title="Suspend agent" size="md">
         {suspending && (
           <div className="space-y-5">
@@ -459,18 +461,18 @@ export function AgentsSection() {
                 <p className="mt-0.5 text-xs font-medium text-ink-500">Conversations</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Agency</p>
                 <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.agency}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Phone</p>
-                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.phone || '—'}</p>
+                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.phone || 'â€”'}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">License</p>
-                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.licenseNumber || '—'}</p>
+                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.licenseNumber || 'â€”'}</p>
               </div>
             </div>
             {summaryQuery.data.bio && (

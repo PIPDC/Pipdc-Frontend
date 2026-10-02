@@ -115,75 +115,77 @@ export function DevelopmentsSection() {
         ) : projects.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[780px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Project</th>
-                <th className={thClass}>Location</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Progress</th>
-                <th className={thClass}>Units</th>
-                <th className={thClass}>Updates</th>
-                <th className={thClass}>Featured</th>
-                <th className={thClass}>Created</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {projects.map((p) => (
-                <tr
-                  key={p.id}
-                  className="cursor-pointer transition-colors hover:bg-ink-50/60"
-                  onClick={() => navigate(`/dashboard/developments/${p.id}`)}
-                >
-                  <td className={tdClass}>
-                    <span className="font-medium text-ink-900">{p.name}</span>
-                    {p.developer && <span className="block text-xs text-ink-400">{p.developer}</span>}
-                  </td>
-                  <td className={tdClass}>{p.location}</td>
-                  <td className={tdClass}>
-                    <Badge tone={developmentStatusTone(p.status)}>{developmentStatusLabel(p.status)}</Badge>
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-ink-100">
-                        <div
-                          className="h-full rounded-full bg-forest-500 transition-all"
-                          style={{ width: `${p.progressPercentage}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-ink-600">{p.progressPercentage}%</span>
-                    </div>
-                  </td>
-                  <td className={tdClass}>{p.unitCount}</td>
-                  <td className={tdClass}>{p.updateCount}</td>
-                  <td className={tdClass}>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); toggleFeatured(p); }}
-                      disabled={togglingId === p.id}
-                      title={p.featured ? 'Remove from home page' : 'Feature on home page'}
-                      className={cn(
-                        'rounded-lg p-2 transition-colors',
-                        p.featured ? 'text-gold-500 hover:text-gold-600' : 'text-ink-300 hover:text-gold-500',
-                        togglingId === p.id && 'animate-pulse',
-                      )}
-                    >
-                      <Star className={cn('h-5 w-5', p.featured && 'fill-gold-500')} />
-                    </button>
-                  </td>
-                  <td className={tdClass}>{timeAgo(p.createdAt)}</td>
-                  <td className={tdClass} onClick={(e) => e.stopPropagation()}>
-                    <RowActions
-                      viewUrl={`/developments/${p.slug}`}
-                      onEdit={() => { setEditing(p); setFormOpen(true); }}
-                      onDelete={() => setDeleting(p)}
-                    />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[780px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Project</th>
+                  <th className={thClass}>Location</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Progress</th>
+                  <th className={thClass}>Units</th>
+                  <th className={thClass}>Updates</th>
+                  <th className={thClass}>Featured</th>
+                  <th className={thClass}>Created</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {projects.map((p) => (
+                  <tr
+                    key={p.id}
+                    className="cursor-pointer transition-colors hover:bg-ink-50/60"
+                    onClick={() => navigate(`/dashboard/developments/${p.id}`)}
+                  >
+                    <td className={tdClass}>
+                      <span className="font-medium text-ink-900">{p.name}</span>
+                      {p.developer && <span className="block text-xs text-ink-400">{p.developer}</span>}
+                    </td>
+                    <td className={tdClass}>{p.location}</td>
+                    <td className={tdClass}>
+                      <Badge tone={developmentStatusTone(p.status)}>{developmentStatusLabel(p.status)}</Badge>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-24 overflow-hidden rounded-full bg-ink-100">
+                          <div
+                            className="h-full rounded-full bg-forest-500 transition-all"
+                            style={{ width: `${p.progressPercentage}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-ink-600">{p.progressPercentage}%</span>
+                      </div>
+                    </td>
+                    <td className={tdClass}>{p.unitCount}</td>
+                    <td className={tdClass}>{p.updateCount}</td>
+                    <td className={tdClass}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleFeatured(p); }}
+                        disabled={togglingId === p.id}
+                        title={p.featured ? 'Remove from home page' : 'Feature on home page'}
+                        className={cn(
+                          'rounded-lg p-2 transition-colors',
+                          p.featured ? 'text-gold-500 hover:text-gold-600' : 'text-ink-300 hover:text-gold-500',
+                          togglingId === p.id && 'animate-pulse',
+                        )}
+                      >
+                        <Star className={cn('h-5 w-5', p.featured && 'fill-gold-500')} />
+                      </button>
+                    </td>
+                    <td className={tdClass}>{timeAgo(p.createdAt)}</td>
+                    <td className={tdClass} onClick={(e) => e.stopPropagation()}>
+                      <RowActions
+                        viewUrl={`/developments/${p.slug}`}
+                        onEdit={() => { setEditing(p); setFormOpen(true); }}
+                        onDelete={() => setDeleting(p)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>

@@ -128,56 +128,58 @@ export function ReportsSection() {
             description="When a signed-in client reports an agent from their public profile, it appears here for triage."
           />
         ) : (
-          <table className="w-full min-w-[880px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Agent</th>
-                <th className={thClass}>Reason</th>
-                <th className={thClass}>Reporter</th>
-                <th className={thClass}>Description</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Filed</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {reports.map((r) => (
-                <tr key={r.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <a href={`/agents/${r.agentId}`} className="font-medium text-ink-900 hover:text-forest-600">
-                      {r.agentName}
-                    </a>
-                    <span className="block text-xs text-ink-400">{r.agentAgency}</span>
-                  </td>
-                  <td className={tdClass}>
-                    {AGENT_REPORT_REASON_LABELS[r.reason as AgentReportReason] ?? r.reason}
-                  </td>
-                  <td className={tdClass}>
-                    <span className="text-ink-700">{r.reporterName}</span>
-                    <span className="block text-xs text-ink-400">{r.reporterEmail}</span>
-                  </td>
-                  <td className={`${tdClass} max-w-xs`}>
-                    <span className="line-clamp-2 text-ink-600">{r.description}</span>
-                  </td>
-                  <td className={tdClass}>
-                    <Badge tone={STATUS_TONE[r.status as AgentReportStatus] ?? 'neutral'}>
-                      {AGENT_REPORT_STATUS_LABELS[r.status as AgentReportStatus] ?? r.status}
-                    </Badge>
-                  </td>
-                  <td className={`${tdClass} whitespace-nowrap text-xs text-ink-500`}>
-                    {new Date(r.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex justify-end">
-                      <Button variant="outline" size="sm" onClick={() => openTriage(r)}>
-                        Triage
-                      </Button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Agent</th>
+                  <th className={thClass}>Reason</th>
+                  <th className={thClass}>Reporter</th>
+                  <th className={thClass}>Description</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Filed</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {reports.map((r) => (
+                  <tr key={r.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <a href={`/agents/${r.agentId}`} className="font-medium text-ink-900 hover:text-forest-600">
+                        {r.agentName}
+                      </a>
+                      <span className="block text-xs text-ink-400">{r.agentAgency}</span>
+                    </td>
+                    <td className={tdClass}>
+                      {AGENT_REPORT_REASON_LABELS[r.reason as AgentReportReason] ?? r.reason}
+                    </td>
+                    <td className={tdClass}>
+                      <span className="text-ink-700">{r.reporterName}</span>
+                      <span className="block text-xs text-ink-400">{r.reporterEmail}</span>
+                    </td>
+                    <td className={`${tdClass} max-w-xs`}>
+                      <span className="line-clamp-2 text-ink-600">{r.description}</span>
+                    </td>
+                    <td className={tdClass}>
+                      <Badge tone={STATUS_TONE[r.status as AgentReportStatus] ?? 'neutral'}>
+                        {AGENT_REPORT_STATUS_LABELS[r.status as AgentReportStatus] ?? r.status}
+                      </Badge>
+                    </td>
+                    <td className={`${tdClass} whitespace-nowrap text-xs text-ink-500`}>
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex justify-end">
+                        <Button variant="outline" size="sm" onClick={() => openTriage(r)}>
+                          Triage
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>

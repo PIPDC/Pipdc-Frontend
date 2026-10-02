@@ -25,51 +25,53 @@ export function MyEnquiriesSection() {
         ) : enquiries.length === 0 ? (
           <TableEmpty />
         ) : (
-          <table className="w-full min-w-[680px] border-collapse">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/60">
-                <th className={thClass}>Property</th>
-                <th className={thClass}>Message</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Sent</th>
-                <th className={thClass}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-50">
-              {enquiries.map((e) => (
-                <tr key={e.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className={tdClass}>
-                    <Link to={`/properties/${e.propertySlug}`} className="font-medium text-forest-600 hover:text-forest-700">
-                      {e.propertyTitle}
-                    </Link>
-                  </td>
-                  <td className={tdClass}><span className="line-clamp-1 text-ink-600">{e.message}</span></td>
-                  <td className={tdClass}><Badge tone={enquiryStatusTone(e.status)}>{enquiryStatusLabel(e.status)}</Badge></td>
-                  <td className={tdClass}>{timeAgo(e.createdAt)}</td>
-                  <td className={tdClass}>
-                    <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setViewing(e)}
-                        title="View details"
-                        className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/dashboard/messages?enquiry=${e.id}`)}
-                        title="Open conversation"
-                        className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
-                      >
-                        <MessagesSquare className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] border-collapse">
+              <thead>
+                <tr className="border-b border-ink-100 bg-ink-50/60">
+                  <th className={thClass}>Property</th>
+                  <th className={thClass}>Message</th>
+                  <th className={thClass}>Status</th>
+                  <th className={thClass}>Sent</th>
+                  <th className={thClass}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-ink-50">
+                {enquiries.map((e) => (
+                  <tr key={e.id} className="transition-colors hover:bg-ink-50/60">
+                    <td className={tdClass}>
+                      <Link to={`/properties/${e.propertySlug}`} className="font-medium text-forest-600 hover:text-forest-700">
+                        {e.propertyTitle}
+                      </Link>
+                    </td>
+                    <td className={tdClass}><span className="line-clamp-1 text-ink-600">{e.message}</span></td>
+                    <td className={tdClass}><Badge tone={enquiryStatusTone(e.status)}>{enquiryStatusLabel(e.status)}</Badge></td>
+                    <td className={tdClass}>{timeAgo(e.createdAt)}</td>
+                    <td className={tdClass}>
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setViewing(e)}
+                          title="View details"
+                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/dashboard/messages?enquiry=${e.id}`)}
+                          title="Open conversation"
+                          className="rounded-lg p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-forest-600"
+                        >
+                          <MessagesSquare className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </CardTable>
 

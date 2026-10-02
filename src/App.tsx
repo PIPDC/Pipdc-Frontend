@@ -31,6 +31,7 @@ import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { DashboardSectionPage } from './pages/dashboard/DashboardSectionPage';
+import { ApplicationReviewPage } from './pages/dashboard/ApplicationReviewPage';
 import { DevelopmentDetailPage } from './pages/dashboard/DevelopmentDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -116,6 +117,17 @@ const router = createBrowserRouter([
         element: (
           <AdminGuard>
             <DashboardSectionPage section="reports" />
+          </AdminGuard>
+        ),
+      },
+      {
+        // The review page for one application. Declared before the `applications`
+        // list so the id segment is matched as a detail route rather than being
+        // swallowed by the list route.
+        path: 'applications/:id',
+        element: (
+          <AdminGuard>
+            <ApplicationReviewPage />
           </AdminGuard>
         ),
       },

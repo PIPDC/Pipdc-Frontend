@@ -30,7 +30,11 @@ interface CardTableProps {
 export function CardTable({ title, actions, children }: CardTableProps) {
   return (
     <Card>
-      <CardHeader className="flex items-center justify-between gap-3">
+      {/*
+        Wraps on narrow screens: the title and the filter/actions cluster sit
+        side by side above `sm`, which squeezes both once the filter row grows.
+      */}
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>{title}</CardTitle>
         {actions}
       </CardHeader>
