@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Bed, Bath, Maximize, MapPin, Calendar, Check, Phone, Mail, Share2,
+  Bed, Bath, Maximize, MapPin, Calendar, Check, Phone, Mail, Share2, ExternalLink,
   Heart, ArrowLeft, ChevronLeft, ChevronRight, BadgeCheck, Star, AlertTriangle, MessagesSquare,
-  MessageSquare, CheckCircle2,
+  CheckCircle2,
 } from 'lucide-react';
 import { useProperty, useSimilarProperties, useAgent, usePropertyEnquiries } from '../hooks/queries';
 import { useFavourites } from '../hooks/useFavourites';
@@ -16,6 +16,8 @@ import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { PropertyCard } from '../components/property/PropertyCard';
+import { PropertyMap } from '../components/PropertyMap';
+import type { Property } from '../types';
 import { useToast } from '../components/ui/Toast';
 import { formatPrice, formatDate } from '../utils/format';
 import { cn } from '../utils/cn';
@@ -23,6 +25,26 @@ import { propertyStatusLabel, listingTypeLabel } from '../utils/propertyStatus';
 import { primaryRole } from '../utils/roles';
 
 const MIN_ENQUIRY_LENGTH = 20;
+
+// Build a Google-Maps-friendly address from the most specific fields available:
+// street address, area/neighbourhood, city, state, then country. It always ends
+// with the property's city and state (e.g. "Jos, Plateau State") plus "Nigeria"
+// so a search can never resolve to another part of Nigeria with a similar name.
+// Returns an empty string when the property has no address at all.
+function propertyMapAddress(property: Property): string {
+  const address = property.address?.trim() ?? '';
+  const area = property.area?.trim() ?? '';
+  const city = property.city?.trim() || 'Jos';
+  const state = (property.state?.trim() ?? 'Plateau').replace(/\s+State$/i, '');
+  const parts = [
+    address,
+    area && !address.toLowerCase().includes(area.toLowerCase()) ? area : null,
+    city,
+    `${state} State`,
+    'Nigeria',
+  ].filter((part): part is string => Boolean(part));
+  return parts.join(', ');
+}
 
 export function PropertyDetailsPage() {
   const { slug } = useParams();
@@ -69,6 +91,8 @@ export function PropertyDetailsPage() {
   const agent = agentQuery.data;
   const similar = similarQuery.data ?? [];
   const fav = isFavourite(property.id);
+  const mapAddress = propertyMapAddress(property);
+  const hasCoordinates = typeof property.latitude === 'number' && typeof property.longitude === 'number';
 
   // Messaging and enquiries are separate. Starting a conversation no longer
   // raises an enquiry as a side effect; the client opens an existing
@@ -266,23 +290,42 @@ export function PropertyDetailsPage() {
               </div>
             )}
 
-            {/* Map placeholder */}
-            <div className="mt-6 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
+                        {/* Map */}
+            <div className="mt-6 rounded-2xl border border-ink-100 bg-white shadow-soft">
               <div className="border-b border-ink-100 px-6 py-4">
                 <h2 className="font-display text-lg font-semibold text-ink-900">Location</h2>
                 <p className="mt-1 text-sm text-ink-500">{property.area}, {property.city}, {property.state}</p>
               </div>
-              <div className="relative aspect-[16/8] bg-ink-100 bg-grid">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-forest-500 text-white shadow-lift">
-                    <MapPin className="h-5 w-5" />
-                  </span>
-                  <span className="absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-forest-500/40" />
+              {mapAddress || hasCoordinates ? (
+                <PropertyMap
+                  address={mapAddress}
+                  latitude={property.latitude}
+                  longitude={property.longitude}
+                  zoom={property.address?.trim() ? 16 : 15}
+                  title={`${property.title} — ${mapAddress || `${property.latitude}, ${property.longitude}`}`}
+                />
+              ) : (
+                <div className="flex aspect-[16/8] flex-col items-center justify-center gap-2 bg-ink-100 p-4 text-center">
+                  <MapPin className="h-6 w-6 text-ink-400" />
+                  <p className="text-sm text-ink-600">Map not available for this property</p>
+                  <p className="text-xs text-ink-400">No address is provided</p>
                 </div>
-                <div className="absolute bottom-4 left-4 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-ink-700 backdrop-blur-sm">
-                  Map data © PIPDC GIS
+              )}
+              {(mapAddress || hasCoordinates) && (
+                <div className="border-t border-ink-100 px-6 py-3">
+                  <a
+                    href={hasCoordinates
+                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.latitude},${property.longitude}`)}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapAddress)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-forest-600 transition-colors hover:text-forest-700"
+                  >
+                    Open in Google Maps
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

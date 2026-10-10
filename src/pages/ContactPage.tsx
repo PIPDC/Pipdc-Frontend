@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { SectionHeading } from '../components/ui/SectionHeading';
+import { PropertyMap } from '../components/PropertyMap';
 import { Input, Textarea, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
@@ -142,16 +143,10 @@ export function ContactPage() {
               ))}
             </div>
 
-            <div className="mt-4 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
-              <div className="relative aspect-[4/3] bg-ink-100 bg-grid">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-forest-500 text-white shadow-lift">
-                    <MapPin className="h-5 w-5" />
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-ink-700 backdrop-blur-sm">
-                  PIPDC HQ, Jos
-                </div>
+            <div className="relative mt-4">
+              <PropertyMap address="12 Secretariat Road, Jos, Plateau State, Nigeria" title="PIPDC HQ, Jos" />
+              <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-ink-700 backdrop-blur-sm">
+                PIPDC HQ, Jos
               </div>
             </div>
 
