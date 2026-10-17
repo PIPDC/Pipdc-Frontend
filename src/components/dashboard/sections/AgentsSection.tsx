@@ -20,7 +20,7 @@ export function AgentsSection() {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const agentsQuery = useAgents({ pageNumber: page, pageSize: PAGE_SIZE, keyword: keyword || undefined });
+  const agentsQuery = useAgents({ pageNumber: page, pageSize: PAGE_SIZE, keyword: keyword || undefined, includeModerated: true });
   const { notify } = useToast();
   const deleteAgent = useDeleteAgent();
   const toggleVerification = useToggleAgentVerification();
@@ -42,14 +42,23 @@ export function AgentsSection() {
   const summaryQuery = useAgentSummary(summarizing?.id);
 
   const agents = agentsQuery.data?.items ?? [];
-  const totalCount = agentsQuery.data?.totalCount ?? 0;
 
-  // The admin directory is the only caller that receives suspended agents, so
-  // this is the only place a suspended badge can be rendered.
+  // A removed agent has left the agency. They keep their row in the database so
+  // historical transactions and listings stay attributable, but they are no
+  // longer part of the roster, so the directory does not list them at all.
+  const removedOnPage = agents.filter((a) => a.isRemoved).length;
+  const activeAgents = agents.filter((a) => !a.isRemoved);
+
+  // The server counts every agent it returned, including the removed ones hidden
+  // above. Subtracting the ones actually seen on this page keeps the footer
+  // paginating instead of collapsing to a single page. Using the filtered page
+  // length here would report "10 agents" for a paginated roster and hide every
+  // page after the first.
+  const totalCount = Math.max(0, (agentsQuery.data?.totalCount ?? 0) - removedOnPage);
+
+  // Suspended agents are still on the roster and still need managing, so they
+  // stay listed with a badge. Only this admin directory receives them.
   const suspendedAgentIds = new Set(agents.filter((a) => a.isSuspended).map((a) => a.id));
-  // Likewise, only admins see removed agents, because a removed one is hidden from
-  // the public directory along with their listings.
-  const removedAgentIds = new Set(agents.filter((a) => a.isRemoved).map((a) => a.id));
 
   // Successors offered in the removal dialog: everyone except the agent being
   // removed and anyone suspended or already removed, since handing live work to
@@ -185,15 +194,15 @@ export function AgentsSection() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-50">
-                {agents.map((a) => (
+                {activeAgents.map((a) => (
                   <tr key={a.id} className="transition-colors hover:bg-ink-50/60">
                     <td className={tdClass}>
                       <span className="font-medium text-ink-900">{a.fullName}</span>
                       <span className="block text-xs text-ink-400">{a.email}</span>
                     </td>
                     <td className={tdClass}>{a.agency}</td>
-                    <td className={tdClass}>{a.phone || 'â€”'}</td>
-                    <td className={tdClass}>{a.licenseNumber || 'â€”'}</td>
+                    <td className={tdClass}>{a.phone || '—'}</td>
+                    <td className={tdClass}>{a.licenseNumber || '—'}</td>
                     <td className={tdClass}>
                       <Badge tone={a.propertyCount > 0 ? 'forest' : 'neutral'}>
                         {a.propertyCount} {a.propertyCount === 1 ? 'property' : 'properties'}
@@ -216,9 +225,6 @@ export function AgentsSection() {
                         {suspendedAgentIds.has(a.id) && (
                           <Badge tone="danger">Suspended</Badge>
                         )}
-                        {removedAgentIds.has(a.id) && (
-                          <Badge tone="danger">Removed</Badge>
-                        )}
                       </div>
                     </td>
                     <td className={tdClass}>
@@ -240,11 +246,9 @@ export function AgentsSection() {
                           <BarChart3 className="h-4 w-4" />
                         </button>
                         {/* Suspension manages a live agent; removal revokes a
-                            registration. They are different decisions, so they get
-                            different controls and a removed agent is not offered
-                            either. */}
-                        {!removedAgentIds.has(a.id) &&
-                          (suspendedAgentIds.has(a.id) ? (
+                            registration. Removed agents are not on this roster at
+                            all, so only the suspension control is reachable here. */}
+                        {suspendedAgentIds.has(a.id) ? (
                             <button
                               type="button"
                               title="Reinstate agent"
@@ -262,7 +266,7 @@ export function AgentsSection() {
                             >
                               <UserX className="h-4 w-4" />
                             </button>
-                          ))}
+                          )}
                         <RowActions
                           viewUrl={`/agents/${a.id}`}
                           onEdit={() => { setEditing(a); setFormOpen(true); }}
@@ -343,7 +347,7 @@ export function AgentsSection() {
                 <option value="">Leave them with no agent</option>
                 {successorOptions.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.fullName} â€” {a.agency}
+                    {a.fullName} — {a.agency}
                   </option>
                 ))}
               </select>
@@ -371,7 +375,7 @@ export function AgentsSection() {
         )}
       </Modal>
 
-      {/* Suspend â€” needs a written reason, so a form rather than a confirm */}
+      {/* Suspend — needs a written reason, so a form rather than a confirm */}
       <Modal open={Boolean(suspending)} onClose={() => setSuspending(null)} title="Suspend agent" size="md">
         {suspending && (
           <div className="space-y-5">
@@ -468,11 +472,11 @@ export function AgentsSection() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Phone</p>
-                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.phone || 'â€”'}</p>
+                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.phone || '—'}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">License</p>
-                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.licenseNumber || 'â€”'}</p>
+                <p className="mt-1 text-sm text-ink-900">{summaryQuery.data.licenseNumber || '—'}</p>
               </div>
             </div>
             {summaryQuery.data.bio && (

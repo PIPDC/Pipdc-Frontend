@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { Sidebar } from './Sidebar';
-import { Button } from '../ui/Button';
+import { NotificationBell } from './NotificationBell';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  // Everyone signed in has a notification feed, and the contents differ by
+  // recipient: admins get the "list this property" prompt when a project
+  // completes, while anyone tracking a project gets the status changes for it.
+  // Restricting the bell to admins meant trackers were told about a status
+  // change by email but had no way to read or dismiss it in the app.
+  const showNotifications = Boolean(user);
 
   return (
     <div className="min-h-screen bg-ink-50">
@@ -30,12 +36,7 @@ export function DashboardLayout() {
             />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <span className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold-400" />
-              </span>
-            </Button>
+            {showNotifications && <NotificationBell />}
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-forest-gradient text-sm font-semibold text-white">
               {user?.fullName?.charAt(0)}
             </div>

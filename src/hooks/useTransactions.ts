@@ -10,6 +10,8 @@ const transactionKeys = {
   list: (filters?: TransactionFilters) => [...TRANSACTIONS_KEY, 'list', filters ?? {}] as const,
   byProperty: (propertyId: number) => [...TRANSACTIONS_KEY, 'property', propertyId] as const,
   analytics: (from?: string, to?: string) => [...TRANSACTIONS_KEY, 'analytics', { from, to }] as const,
+  tenants: () => [...TRANSACTIONS_KEY, 'tenants'] as const,
+  purchasers: () => [...TRANSACTIONS_KEY, 'purchasers'] as const,
 };
 
 export function useTransactions(filters?: TransactionFilters) {
@@ -34,6 +36,22 @@ export function useTransactionAnalytics(from?: string, to?: string) {
   return useQuery({
     queryKey: transactionKeys.analytics(from, to),
     queryFn: () => transactionService.analytics(from, to),
+  });
+}
+
+/** Current tenants across rented properties. Admin-only on the server. */
+export function useTenants() {
+  return useQuery({
+    queryKey: transactionKeys.tenants(),
+    queryFn: () => transactionService.tenants(),
+  });
+}
+
+/** Clients who purchased a property. Admin-only on the server. */
+export function usePurchasers() {
+  return useQuery({
+    queryKey: transactionKeys.purchasers(),
+    queryFn: () => transactionService.purchasers(),
   });
 }
 
@@ -65,5 +83,19 @@ export function useRecordLease() {
     mutationFn: ({ propertyId, payload, idempotencyKey }: { propertyId: number; payload: RecordLeasePayload; idempotencyKey: string }) =>
       transactionService.recordLease(propertyId, payload, idempotencyKey),
     onSuccess: (_data, { propertyId }) => invalidate(propertyId),
+  });
+}
+
+/**
+ * Emails a tenant the time left on their lease. [Idempotent] server-side, so the
+ * service generates a fresh key per call; a retry of the same click replays.
+ */
+export function useNotifyTenant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (leaseId: number) => transactionService.notifyTenant(leaseId, crypto.randomUUID()),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
+    },
   });
 }

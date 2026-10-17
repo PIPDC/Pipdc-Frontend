@@ -8,6 +8,12 @@ export interface AgentFilters {
   sortDescending?: boolean;
   pageNumber?: number;
   pageSize?: number;
+  /**
+   * Admin-only. Asks the server for suspended and revoked agents as well as
+   * visible ones. Ignored by the server unless the caller holds the Admin role,
+   * so leaving it unset is what keeps the public directory public.
+   */
+  includeModerated?: boolean;
 }
 
 /**

@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bot, MapPin, Send, Sparkles, Trash2, User } from 'lucide-react';
 import { useToast } from '../ui/Toast';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAiSession } from '../../hooks/queries';
 import { useSendAiMessage, useClearAiSession } from '../../hooks/mutations';
 import { extractApiError } from '../../services/api';
+import { useAutoGrowTextarea } from '../../hooks/useAutoGrowTextarea';
 import { formatPrice } from '../../utils/format';
 import { cn } from '../../utils/cn';
+import { ContactPreferencePrompt } from './ContactPreferencePrompt';
 import type { AiChatMessage, Property } from '../../types';
 
 export interface AiChatPanelProps {
@@ -23,6 +26,7 @@ const suggestions = [
 
 export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
   const { notify } = useToast();
+  const { isAuthenticated, isRestoring } = useAuth();
   const sessionQuery = useAiSession();
   const sendMutation = useSendAiMessage();
   const clearMutation = useClearAiSession();
@@ -30,6 +34,12 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
   const [input, setInput] = useState('');
   const hydratedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useAutoGrowTextarea(input);
+
+  // The assistant endpoint requires a bearer token, so a signed-out visitor can
+  // never start a conversation. Say so before they type rather than after the
+  // request fails.
+  const signedOut = !isRestoring && !isAuthenticated;
 
   useEffect(() => {
     if (sessionQuery.data?.messages.length && !hydratedRef.current) {
@@ -129,7 +139,31 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {!hasMessages && (
+        {!hasMessages && signedOut && (
+          <div className="flex h-full flex-col items-center justify-center gap-3 py-6 text-center">
+            <p className="text-sm font-medium text-ink-700">Sign in to start a conversation</p>
+            <p className="text-xs leading-relaxed text-ink-500">
+              The concierge recommends live PIPDC listings, so it needs to know who is asking. Create
+              an account or sign in to continue.
+            </p>
+            <div className="mt-1 flex flex-wrap justify-center gap-2">
+              <Link
+                to="/login"
+                className="rounded-full bg-forest-500 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-forest-600"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-full border border-ink-200 bg-white px-4 py-2 text-xs font-semibold text-ink-700 transition-colors hover:border-forest-500 hover:text-forest-600"
+              >
+                Create account
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {!hasMessages && !signedOut && (
           <div className="space-y-2 py-4 text-center">
             <p className="text-sm text-ink-500">
               Ask for property recommendations by location and budget — for example: “Find me a 2-bedroom
@@ -154,6 +188,12 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
           <ChatBubble key={message.sentAt} message={message} />
         ))}
 
+        {!sessionQuery.data?.escalation && sessionQuery.data?.contactPromptReason && (
+          <ContactPreferencePrompt
+            onSubmitted={(message) => setMessages((prev) => [...prev, message])}
+          />
+        )}
+
         {sendMutation.isPending && (
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest-500 text-white">
@@ -167,6 +207,16 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
       </div>
 
       {/* Composer */}
+      {signedOut ? (
+        <div className="shrink-0 border-t border-ink-100 px-4 py-3">
+          <Link
+            to="/login"
+            className="flex h-11 w-full items-center justify-center rounded-full bg-forest-500 text-sm font-semibold text-white transition-colors hover:bg-forest-600"
+          >
+            Sign in to ask the concierge
+          </Link>
+        </div>
+      ) : (
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -174,14 +224,22 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
         }}
         className="shrink-0 border-t border-ink-100 px-4 py-3"
       >
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                handleSend(input);
+              }
+            }}
+            rows={1}
             placeholder="Ask about location, budget, bedrooms…"
             maxLength={2000}
-            className="h-11 flex-1 rounded-full border border-ink-200 bg-white px-4 text-sm text-ink-800 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-2 focus:ring-forest-500/20"
+            aria-label="Message the concierge"
+            className="max-h-[160px] min-h-[44px] flex-1 resize-none rounded-2xl border border-ink-200 bg-white px-4 py-3 text-sm leading-relaxed text-ink-800 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-2 focus:ring-forest-500/20"
           />
           <button
             type="submit"
@@ -200,6 +258,7 @@ export function AiChatPanel({ embedded = false, onClose }: AiChatPanelProps) {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

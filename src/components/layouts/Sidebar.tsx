@@ -17,6 +17,11 @@ import {
   FileCheck2,
   Flag,
   Scale,
+  BarChart3,
+  ShieldAlert,
+  Bot,
+  KeyRound,
+  Handshake,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,6 +41,11 @@ const adminItems = [
   { label: 'Appeals & Bars', to: '/dashboard/appeals', icon: Scale },
   { label: 'Enquiries', to: '/dashboard/enquiries', icon: MessageSquare },
   { label: 'Messages', to: '/dashboard/messages', icon: MessagesSquare },
+  { label: 'Escalations', to: '/dashboard/escalations', icon: ShieldAlert },
+  { label: 'Concierge Escalations', to: '/dashboard/concierge-escalations', icon: Bot },
+  { label: 'Statistics', to: '/dashboard/statistics', icon: BarChart3 },
+  { label: 'Tenants', to: '/dashboard/tenants', icon: KeyRound },
+  { label: 'Purchasers', to: '/dashboard/purchasers', icon: Handshake },
   { label: 'Blog', to: '/dashboard/blog', icon: Newspaper },
   { label: 'Users', to: '/dashboard/users', icon: UserCircle },
   { label: 'Settings', to: '/dashboard/settings', icon: Settings },

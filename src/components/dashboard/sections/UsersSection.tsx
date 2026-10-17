@@ -171,7 +171,7 @@ export function UsersSection() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Phone</p>
-                <p className="mt-1 text-sm text-ink-900">{detailQuery.data.phoneNumber || 'â€”'}</p>
+                <p className="mt-1 text-sm text-ink-900">{detailQuery.data.phoneNumber || '—'}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">Joined</p>
@@ -201,11 +201,11 @@ export function UsersSection() {
                 <div className="mt-1.5 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                   <div>
                     <span className="text-gold-600">Agency:</span>{' '}
-                    <span className="text-gold-800">{detailQuery.data.agentAgencyName || 'â€”'}</span>
+                    <span className="text-gold-800">{detailQuery.data.agentAgencyName || '—'}</span>
                   </div>
                   <div>
                     <span className="text-gold-600">License:</span>{' '}
-                    <span className="text-gold-800">{detailQuery.data.agentLicenseNumber || 'â€”'}</span>
+                    <span className="text-gold-800">{detailQuery.data.agentLicenseNumber || '—'}</span>
                   </div>
                   <div>
                     <span className="text-gold-600">Verified:</span>{' '}

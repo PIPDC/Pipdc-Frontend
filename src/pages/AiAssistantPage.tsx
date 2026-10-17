@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Sparkles, Trash2, MapPin, ArrowUpRight, Bot, User } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../contexts/AuthContext';
 import { useAiSession } from '../hooks/queries';
+import { useAutoGrowTextarea } from '../hooks/useAutoGrowTextarea';
 import { useClearAiSession, useSendAiMessage } from '../hooks/mutations';
 import { extractApiError } from '../services/api';
 import { formatPrice, timeAgo } from '../utils/format';
+import { ContactPreferencePrompt } from '../components/ai/ContactPreferencePrompt';
 import type { AiChatMessage, Property } from '../types';
 
 const suggestions = [
@@ -20,12 +22,18 @@ const suggestions = [
 
 export function AiAssistantPage() {
   const { notify } = useToast();
+  const { isAuthenticated, isRestoring } = useAuth();
   const sessionQuery = useAiSession();
   const sendMutation = useSendAiMessage();
   const clearMutation = useClearAiSession();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useAutoGrowTextarea(input);
+
+  // Same contract as the floating concierge: the endpoint is authorised, so a
+  // signed-out visitor gets a sign-in prompt instead of a composer that cannot work.
+  const signedOut = !isRestoring && !isAuthenticated;
 
   useEffect(() => {
     if (sessionQuery.data?.messages.length) {
@@ -39,7 +47,7 @@ export function AiAssistantPage() {
 
   const handleSend = (raw: string) => {
     const content = raw.trim();
-    if (!content || sendMutation.isPending) return;
+    if (!content || sendMutation.isPending || signedOut) return;
     setInput('');
 
     const optimistic: AiChatMessage = { role: 'user', content, sentAt: new Date().toISOString(), properties: null };
@@ -93,7 +101,35 @@ export function AiAssistantPage() {
 
         <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-5 py-6">
           <AnimatePresence initial={false}>
-            {!hasMessages && (
+            {!hasMessages && signedOut && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="flex h-full flex-col items-center justify-center gap-3 py-6 text-center"
+              >
+                <p className="font-display text-base font-semibold text-ink-900">Sign in to start a conversation</p>
+                <p className="max-w-md text-sm leading-relaxed text-ink-500">
+                  The assistant recommends live PIPDC listings, so it needs to know who is asking.
+                  Create an account or sign in to continue.
+                </p>
+                <div className="mt-1 flex flex-wrap justify-center gap-2">
+                  <Link
+                    to="/login"
+                    className="rounded-full bg-forest-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-600"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink-700 transition-colors hover:border-forest-500 hover:text-forest-600"
+                  >
+                    Create account
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+            {!hasMessages && !signedOut && (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="py-6 text-center">
                 <p className="mx-auto max-w-md text-sm leading-relaxed text-ink-500">
                   Ask for property recommendations by location and budget — for example: “Find me a 2-bedroom apartment to rent in Jos
@@ -118,6 +154,12 @@ export function AiAssistantPage() {
             <ChatBubble key={`${message.sentAt}-${index}`} message={message} />
           ))}
 
+          {!sessionQuery.data?.escalation && sessionQuery.data?.contactPromptReason && (
+            <ContactPreferencePrompt
+              onSubmitted={(message) => setMessages((prev) => [...prev, message])}
+            />
+          )}
+
           {sendMutation.isPending && (
             <div className="flex items-start gap-3">
               <Avatar type="model" />
@@ -128,6 +170,16 @@ export function AiAssistantPage() {
           )}
         </div>
 
+        {signedOut ? (
+          <div className="border-t border-ink-100 p-4">
+            <Link
+              to="/login"
+              className="flex h-12 w-full items-center justify-center rounded-xl bg-forest-500 text-sm font-semibold text-white transition-colors hover:bg-forest-600"
+            >
+              Sign in to ask the assistant
+            </Link>
+          </div>
+        ) : (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -135,20 +187,29 @@ export function AiAssistantPage() {
           }}
           className="border-t border-ink-100 p-4"
         >
-          <div className="flex items-center gap-3">
-            <Input
+          <div className="flex items-end gap-3">
+            <textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  handleSend(input);
+                }
+              }}
+              rows={1}
               placeholder="Ask about properties in your chosen location and budget…"
-              className="h-12"
               maxLength={2000}
               aria-label="Message the assistant"
+              className="max-h-[160px] min-h-[48px] flex-1 resize-none rounded-xl border border-ink-200 bg-white px-4 py-3 text-base text-ink-900 placeholder:text-ink-400 focus:border-forest-500 focus:outline-none focus:ring-2 focus:ring-forest-500/20 md:text-sm"
             />
             <Button type="submit" size="icon" variant="primary" loading={sendMutation.isPending} aria-label="Send message">
               <Send className="h-4 w-4" />
             </Button>
           </div>
         </form>
+        )}
       </Card>
     </div>
   );

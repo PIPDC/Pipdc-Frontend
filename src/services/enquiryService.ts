@@ -39,11 +39,11 @@ export const enquiryService = {
     });
     return data.items[0] ?? null;
   },
-  async agentSummaries(params?: Record<string, unknown>): Promise<Paginated<AgentEnquirySummary>> {
+  async agentSummaries(params?: EnquiryFilters): Promise<Paginated<AgentEnquirySummary>> {
     const { data } = await api.get<Paginated<AgentEnquirySummary>>('/enquiries/agents/summary', { params });
     return data;
   },
-  async byAgent(agentId: number, params?: Record<string, unknown>): Promise<Paginated<Enquiry>> {
+  async byAgent(agentId: number, params?: EnquiryFilters): Promise<Paginated<Enquiry>> {
     const { data } = await api.get<Paginated<Enquiry>>(`/enquiries/agents/${agentId}`, { params });
     return data;
   },

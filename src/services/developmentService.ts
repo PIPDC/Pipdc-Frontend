@@ -65,6 +65,11 @@ export const developmentService = {
     const { data } = await api.put<DevelopmentUnit>(`/development-projects/${projectId}/units/${unitId}`, payload);
     return data;
   },
+  /** Turns a ready unit into its own listing. Idempotent. */
+  async promoteUnit(projectId: number, unitId: number): Promise<DevelopmentUnit> {
+    const { data } = await api.post<DevelopmentUnit>(`/development-projects/${projectId}/units/${unitId}/promote`);
+    return data;
+  },
   async deleteUnit(projectId: number, unitId: number): Promise<void> {
     await api.delete(`/development-projects/${projectId}/units/${unitId}`);
   },

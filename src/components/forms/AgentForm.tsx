@@ -46,7 +46,7 @@ export function AgentForm({ open, agent, onClose }: AgentFormProps) {
 
   useEffect(() => {
     if (!open) {
-      setPhoto(null);
+      setPhoto([]);
       return;
     }
     if (agent) {

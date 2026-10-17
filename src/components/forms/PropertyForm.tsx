@@ -11,7 +11,7 @@ import { useLocations } from '../../hooks/queries';
 import { useToast } from '../ui/Toast';
 import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTION } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { propertyStatusLabel } from '../../utils/propertyStatus';
+import { propertyStatusLabel, propertyStatusesForListingType } from '../../utils/propertyStatus';
 import type { Property, PropertyType } from '../../types';
 import type { UploadResult } from '../../services/imageService';
 
@@ -74,16 +74,21 @@ interface PropertyFormProps {
   property: Property | null;
   agents: { id: number; fullName: string }[];
   onClose: () => void;
+  /**
+   * Raised instead of saving a Sold/Rented status, because those states are only
+   * reached by recording the transaction that caused them.
+   */
+  onRequestTransaction?: (property: Property, outcome: 'Sold' | 'Rented') => void;
 }
 
-export function PropertyForm({ open, property, agents, onClose }: PropertyFormProps) {
+export function PropertyForm({ open, property, agents, onClose, onRequestTransaction }: PropertyFormProps) {
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('Admin') ?? false;
   const isAgent = user?.roles.includes('Agent') ?? false;
   const { notify } = useToast();
   const createProperty = useCreateProperty();
   const updateProperty = useUpdateProperty();
-  const { register, handleSubmit, reset, setError, setValue, formState: { errors, isSubmitting } } = useForm<PropertyFormValues>({
+  const { register, handleSubmit, reset, setError, setValue, watch, formState: { errors, isSubmitting } } = useForm<PropertyFormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -93,6 +98,17 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
   const [showCityModal, setShowCityModal] = useState(false);
   const [newCityName, setNewCityName] = useState('');
+
+  // Status options follow the listing type. If the property is already stored in
+  // a status its listing type does not allow, that value stays in the list so the
+  // admin can see and correct it instead of the dropdown appearing to lose it.
+  const listingType = watch('listingType');
+  const currentStatus = watch('status');
+  const statusOptions = propertyStatusesForListingType(listingType);
+  const statusOptionsWithCurrent =
+    currentStatus && !statusOptions.includes(currentStatus)
+      ? [...statusOptions, currentStatus].sort((a, b) => statuses.indexOf(a) - statuses.indexOf(b))
+      : statusOptions;
 
   const { data: states = [] } = useLocations({ type: 'State' });
   const { data: cities = [] } = useLocations(selectedStateId ? { parentId: selectedStateId } : undefined);
@@ -159,7 +175,7 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
         currency: property.currency,
         period: property.period ?? '',
         status: property.status,
-        listingType: property.listingType || 'ForSale',
+        listingType: listingTypes.find((t) => t === property.listingType) ?? 'ForSale',
         type: property.type,
         bedrooms: property.bedrooms ?? undefined,
         bathrooms: property.bathrooms ?? undefined,
@@ -176,7 +192,7 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
         longitude: property.longitude ?? undefined,
         amenities: (property.amenities ?? []).join('\n'),
         featured: property.featured,
-        agentId: property.agentId,
+        agentId: property.agentId ?? undefined,
       });
       setImages((property.images ?? []).map((url, i) => ({ url, publicId: `existing-${i}` })));
     } else {
@@ -240,6 +256,27 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
       return;
     }
 
+    // A brand new listing cannot already be Sold or Rented: there is no property
+    // id yet, so there is nowhere to file the sale or rental against. Caught here
+    // rather than sent to the API so the message lands on the field the admin is
+    // looking at instead of arriving as a failed save.
+    if (!isEditing && (data.status === 'Sold' || data.status === 'Rented')) {
+      setError('status', {
+        message: 'A new listing starts as Available, Pending or Unavailable. File the sale or rental from the property row afterwards.',
+      });
+      return;
+    }
+
+    // Moving an existing listing to Sold or Rented means a deal was closed, so the
+    // paperwork has to be filed before the status can change. The other edits are
+    // saved first so switching the status does not discard the admin's work.
+    const wantsTransaction =
+      isEditing &&
+      property != null &&
+      (data.status === 'Sold' || data.status === 'Rented') &&
+      data.status !== property.status;
+    const requestedOutcome = data.status === 'Sold' ? 'Sold' : 'Rented';
+
     const payload: Record<string, unknown> = {
       title: data.title,
       description: data.description,
@@ -247,7 +284,7 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
       price: data.price,
       currency: data.currency,
       period: data.period?.trim() || undefined,
-      status: data.status,
+      status: wantsTransaction ? property!.status : data.status,
       listingType: data.listingType,
       type: data.type,
       bedrooms: data.bedrooms,
@@ -272,6 +309,16 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
     try {
       if (isEditing && property) {
         await updateProperty.mutateAsync({ id: property.id, payload });
+        if (wantsTransaction && onRequestTransaction) {
+          notify({
+            type: 'info',
+            title: 'Details saved',
+            description: `Record the ${requestedOutcome === 'Sold' ? 'sale' : 'rental'} to finish changing the status.`,
+          });
+          onClose();
+          onRequestTransaction(property, requestedOutcome);
+          return;
+        }
         notify({ type: 'success', title: 'Property updated', description: `"${data.title}" was updated.` });
       } else {
         await createProperty.mutateAsync(payload);
@@ -311,7 +358,9 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
         <div className="grid gap-4 sm:grid-cols-4">
           <Input label="Period (for rentals)" placeholder="e.g. Per annum" error={errors.period?.message} {...register('period')} />
           <Select label="Status" error={errors.status?.message} {...register('status')}>
-            {statuses.map((s) => (
+            {/* Narrowed to the listing type: a sale cannot be Rented and a
+                rental cannot be Sold. */}
+            {statusOptionsWithCurrent.map((s) => (
               <option key={s} value={s}>{propertyStatusLabel(s)}</option>
             ))}
           </Select>
@@ -367,9 +416,13 @@ export function PropertyForm({ open, property, agents, onClose }: PropertyFormPr
         <Input label="Slug (optional)" placeholder="Auto-generated from title if blank" error={errors.slug?.message} {...register('slug')} />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Latitude" type="number" step="any" placeholder="e.g. 9.0765" error={errors.latitude?.message} {...register('latitude', { setValueAs: toOptionalNumber })} />
-          <Input label="Longitude" type="number" step="any" placeholder="e.g. 7.3986" error={errors.longitude?.message} {...register('longitude', { setValueAs: toOptionalNumber })} />
+          <Input label="Latitude" type="number" step="any" placeholder="e.g. 9.9265" error={errors.latitude?.message} {...register('latitude', { setValueAs: toOptionalNumber })} />
+          <Input label="Longitude" type="number" step="any" placeholder="e.g. 8.8922" error={errors.longitude?.message} {...register('longitude', { setValueAs: toOptionalNumber })} />
         </div>
+        <p className="text-xs text-ink-500">
+          Coordinates are optional. In Google Maps, right-click the exact spot and click the numbers to copy them.
+          If left blank, the map falls back to the street address.
+        </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Textarea label="Amenities (one per line)" placeholder={'Air conditioning\nGarage\nSwimming pool'} className="min-h-[80px]" error={errors.amenities?.message} {...register('amenities')} />

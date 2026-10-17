@@ -140,6 +140,13 @@ export function DevelopmentsSection() {
                     <td className={tdClass}>
                       <span className="font-medium text-ink-900">{p.name}</span>
                       {p.developer && <span className="block text-xs text-ink-400">{p.developer}</span>}
+                      {/* A project is the estate, not a house, so it is never listed
+                          itself. What matters here is whether its units are ready. */}
+                      {p.status === 'Completed' && (
+                        <span className="block text-xs text-ink-500">
+                          {p.unitCount} unit{p.unitCount === 1 ? '' : 's'}
+                        </span>
+                      )}
                     </td>
                     <td className={tdClass}>{p.location}</td>
                     <td className={tdClass}>

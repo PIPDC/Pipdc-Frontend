@@ -175,6 +175,11 @@ export function DevelopmentProjectForm({ open, project, onClose }: DevelopmentPr
         displayOrder: i,
       })),
       featured: data.featured,
+      // Sent back unchanged so that saving an unrelated field cannot silently
+      // drop the project's link to its listing. The form does not offer a control
+      // for it, which means the only value it can legitimately send is the one it
+      // was opened with.
+      propertyId: isEditing ? (project?.propertyId ?? null) : null,
     };
 
     try {
@@ -240,7 +245,7 @@ export function DevelopmentProjectForm({ open, project, onClose }: DevelopmentPr
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Input label="Progress %" type="number" min={0} max={100} placeholder="0" error={errors.progressPercentage?.message} {...register('progressPercentage', { setValueAs: toOptionalNumber })} />
+          <Input label="Progress %" type="number" min={0} max={100} placeholder="0" hint="A project marked Completed is stored at 100% automatically." error={errors.progressPercentage?.message} {...register('progressPercentage', { setValueAs: toOptionalNumber })} />
           <Input label="Slug (optional)" placeholder="Auto-generated from name if blank" error={errors.slug?.message} {...register('slug')} />
         </div>
 

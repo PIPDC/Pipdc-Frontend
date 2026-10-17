@@ -36,8 +36,8 @@ export function MyReportsSection() {
         // Tells the user how to file one, since the entry point is the agent
         // profile rather than this page.
         <EmptyState
-          title="You havenâ€™t reported an agent"
-          description="Open an agentâ€™s public profile and choose â€œReport this agentâ€. You can follow the outcome here."
+          title="You haven’t reported an agent"
+          description="Open an agent’s public profile and choose “Report this agent”. You can follow the outcome here."
         />
       ) : (
         <div className="overflow-x-auto">
