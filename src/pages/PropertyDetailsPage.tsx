@@ -94,10 +94,10 @@ export function PropertyDetailsPage() {
   const mapAddress = propertyMapAddress(property);
   const hasCoordinates = typeof property.latitude === 'number' && typeof property.longitude === 'number';
 
-  // Messaging and enquiries are separate. Starting a conversation no longer
-  // raises an enquiry as a side effect; the client opens an existing
-  // conversation about this property, or starts a fresh one from the messages
-  // page. Only the enquiry form below creates an Enquiry.
+  // Messaging and enquiries are separate. "Message agent" opens a conversation
+  // about this property directly, with no enquiry required; the server keys the
+  // thread on (client, agent, property), so a second click reopens the same one.
+  // Only the enquiry form below creates an Enquiry.
   const startMessaging = async () => {
     if (!user) {
       navigate('/login', { state: { from: `/properties/${slug}` } });
@@ -105,14 +105,14 @@ export function PropertyDetailsPage() {
     }
     setStarting(true);
     try {
-      const existing = await enquiryService.mineByProperty(property.id);
-      const conversationId = existing ? await conversationService.getConversationForEnquiry(existing.id) : null;
-
-      navigate(
-        conversationId === null
-          ? `/dashboard/messages?property=${property.id}`
-          : `/dashboard/messages?conversation=${conversationId}`,
-      );
+      const conversationId = await conversationService.start(property.id);
+      // Never navigate without an id: the thread is only opened once the server
+      // has returned the conversation it created or reused.
+      if (!conversationId) {
+        notify({ type: 'error', title: 'Could not start conversation', description: 'Please try again.' });
+        return;
+      }
+      navigate(`/dashboard/messages/${conversationId}`);
     } catch (err) {
       notify({ type: 'error', title: 'Could not start conversation', description: extractApiError(err) });
     } finally {
@@ -415,7 +415,7 @@ export function PropertyDetailsPage() {
 
                 <div className="mt-4 border-t border-ink-100 pt-4">
                   <p className="text-xs text-ink-500">
-                    Already sent an enquiry and want to talk it through instead?
+                    Have a question? Message the agent directly.
                   </p>
                   <Button
                     variant="outline"
@@ -425,7 +425,7 @@ export function PropertyDetailsPage() {
                     leftIcon={<MessagesSquare className="h-4 w-4" />}
                     onClick={startMessaging}
                   >
-                    Message agent instead
+                    Message agent
                   </Button>
                 </div>
               </div>

@@ -6,9 +6,11 @@ interface MessageComposerProps {
   canSend: boolean;
   sending: boolean;
   onSend: (content: string) => Promise<void>;
+  /** Focus the textarea on mount so an opened conversation is ready to type in. */
+  autoFocus?: boolean;
 }
 
-export function MessageComposer({ canSend, sending, onSend }: MessageComposerProps) {
+export function MessageComposer({ canSend, sending, onSend, autoFocus }: MessageComposerProps) {
   const [draft, setDraft] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
@@ -27,6 +29,7 @@ export function MessageComposer({ canSend, sending, onSend }: MessageComposerPro
     <form onSubmit={handleSubmit} className="border-t border-ink-100 bg-white p-3">
       <div className="flex items-end gap-2">
         <textarea
+          autoFocus={autoFocus}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

@@ -248,6 +248,7 @@ export function ConversationView({
         isLoading={messagesQuery.isLoading}
         isError={messagesQuery.isError}
         onRetry={() => messagesQuery.refetch()}
+        emptyMessage={`Say hello to ${otherName} about ${conversation.property.title}.`}
       />
 
       <div className="border-t border-ink-100 bg-white">
@@ -267,6 +268,7 @@ export function ConversationView({
           canSend={composerEnabled}
           sending={sendMessage.isPending}
           onSend={handleSend}
+          autoFocus={composerEnabled}
         />
       </div>
 

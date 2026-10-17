@@ -296,7 +296,11 @@ export function useSendFirstMessage() {
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       void queryClient.invalidateQueries({ queryKey: queryKeys.conversation(data.conversation.id) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.conversationByEnquiry(data.conversation.enquiryId) });
+      // A conversation sent from an enquiry screen is always linked to it, but
+      // the link is optional in the API, so guard before invalidating.
+      if (data.conversation.enquiryId !== null) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.conversationByEnquiry(data.conversation.enquiryId) });
+      }
       void queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.conversation.id) });
     },
   });

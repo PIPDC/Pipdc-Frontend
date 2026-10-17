@@ -264,7 +264,8 @@ export interface ConversationProperty {
 
 export interface Conversation {
   id: number;
-  enquiryId: number;
+  // Messaging no longer depends on an enquiry, so a conversation may have none.
+  enquiryId: number | null;
   client: ConversationClient;
   agent: ConversationAgent;
   property: ConversationProperty;

@@ -235,6 +235,12 @@ const router = createBrowserRouter([
         element: <DashboardSectionPage section="messages" />,
       },
       {
+        // The selected conversation lives in the URL so a message thread can be
+        // opened directly (from "Message agent") and survives a refresh.
+        path: 'messages/:conversationId',
+        element: <DashboardSectionPage section="messages" />,
+      },
+      {
         path: 'blog',
         element: (
           <AdminGuard>
