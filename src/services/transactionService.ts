@@ -1,8 +1,11 @@
 import { api } from './api';
 import type {
+  NotifyTenantResult,
   Paginated,
+  PurchaserInfo,
   RecordLeasePayload,
   RecordSalePayload,
+  TenantInfo,
   Transaction,
   TransactionAnalytics,
   TransactionFilters,
@@ -45,6 +48,28 @@ export const transactionService = {
     const { data } = await api.get<TransactionAnalytics>('/transactions/analytics', {
       params: { from, to },
     });
+    return data;
+  },
+
+  /** Admin-only roster of current tenants across rented properties. */
+  async tenants(): Promise<TenantInfo[]> {
+    const { data } = await api.get<TenantInfo[]>('/transactions/tenants');
+    return data;
+  },
+
+  /** Admin-only roster of clients who purchased a property. */
+  async purchasers(): Promise<PurchaserInfo[]> {
+    const { data } = await api.get<PurchaserInfo[]>('/transactions/purchasers');
+    return data;
+  },
+
+  /** Admin-only. Emails a tenant the time left on their lease. */
+  async notifyTenant(leaseId: number, idempotencyKey: string): Promise<NotifyTenantResult> {
+    const { data } = await api.post<NotifyTenantResult>(
+      `/transactions/leases/${leaseId}/notify`,
+      undefined,
+      { headers: { 'Idempotency-Key': idempotencyKey } },
+    );
     return data;
   },
 };

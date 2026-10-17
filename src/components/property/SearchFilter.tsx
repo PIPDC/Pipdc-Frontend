@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Home, Tag, Bed, Wallet } from 'lucide-react';
 import { Select } from '../ui/Input';

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Star, MessageSquare, Search } from 'lucide-react';
 import { Button } from '../../ui/Button';
-import { Badge } from '../../ui/Badge';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { PropertyForm } from '../../forms/PropertyForm';
 import {
@@ -18,9 +17,10 @@ import { extractApiError, isConcurrencyConflict, CONCURRENCY_CONFLICT_DESCRIPTIO
 import { useToast } from '../../ui/Toast';
 import { primaryRole } from '../../../utils/roles';
 import { cn } from '../../../utils/cn';
-import { propertyStatusLabel, PROPERTY_STATUSES } from '../../../utils/propertyStatus';
+import { propertyStatusLabel, isStatusValidForListingType, propertyStatusesForListingType } from '../../../utils/propertyStatus';
 import { CardTable, RowActions, LoadingRows, TableEmpty, thClass, tdClass, SectionFooter } from './shared';
-import type { Property } from '../../../types';
+import { RecordTransactionDialog } from './RecordTransactionDialog';
+import type { Property, PropertyStatus } from '../../../types';
 
 const PAGE_SIZE = 10;
 
@@ -45,6 +45,8 @@ export function PropertiesSection() {
   const [editing, setEditing] = useState<Property | null>(null);
   const [deleting, setDeleting] = useState<Property | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [transactionProperty, setTransactionProperty] = useState<Property | null>(null);
+  const [transactionOutcome, setTransactionOutcome] = useState<'Sold' | 'Rented' | null>(null);
 
   const { notify } = useToast();
   const deleteProperty = useDeleteProperty();
@@ -57,9 +59,11 @@ export function PropertiesSection() {
   const agentId = role === 'Agent' ? myAgentQuery.data?.id : undefined;
 
   const propertiesQuery = useProperties(role === 'Agent' && agentId
-    ? { agentId, pageNumber: page, pageSize: PAGE_SIZE, query: keyword || undefined }
-    : { pageNumber: page, pageSize: PAGE_SIZE, query: keyword || undefined });
-  const agentsQuery = useAgents();
+    ? { agentId, page, pageSize: PAGE_SIZE, query: keyword || undefined }
+    : { page, pageSize: PAGE_SIZE, query: keyword || undefined });
+  // The agent-assignment dropdown must offer every approved agent, including
+  // ones the admin has not verified yet, so it opts into the moderated list.
+  const agentsQuery = useAgents({ includeModerated: true });
 
   const openCreate = () => {
     setEditing(null);
@@ -109,11 +113,20 @@ export function PropertiesSection() {
     }
   };
 
-  const handleStatusChange = async (p: Property, newStatus: string) => {
+  const handleStatusChange = async (p: Property, newStatus: PropertyStatus) => {
     if (newStatus === p.status) return;
+    // Sold and Rented are reached by filing the transaction, not by editing a
+    // field. The transaction service flips the property status in the same
+    // database transaction, so opening the dialog here is the whole flow: a
+    // status-only update would be rejected and would leave the deal unattributed.
+    if (newStatus === 'Sold' || newStatus === 'Rented') {
+      setTransactionProperty(p);
+      setTransactionOutcome(newStatus);
+      return;
+    }
     try {
       await changeStatus.mutateAsync({ id: p.id, status: newStatus });
-      notify({ type: 'success', title: 'Status updated', description: `"${p.title}" is now ${propertyStatusLabel(newStatus as any)}.` });
+      notify({ type: 'success', title: 'Status updated', description: `"${p.title}" is now ${propertyStatusLabel(newStatus)}.` });
     } catch (err) {
       notify({
         type: 'error',
@@ -139,7 +152,11 @@ export function PropertiesSection() {
     }
   };
 
-  const agents = agentsQuery.data?.items ?? [];
+  // A removed agent cannot be given new work: they are off the roster and hidden
+  // from the public directory, so a listing assigned to them would have no
+  // reachable agent. Unverified and suspended agents stay, because the admin may
+  // still be mid-way through verifying or reinstating them.
+  const agents = (agentsQuery.data?.items ?? []).filter((a) => !a.isRemoved);
   const properties = propertiesQuery.data?.items ?? [];
   const totalCount = propertiesQuery.data?.totalCount ?? 0;
 
@@ -210,15 +227,21 @@ export function PropertiesSection() {
                     <td className={tdClass}>
                       <select
                         value={p.status}
-                        onChange={(e) => handleStatusChange(p, e.target.value)}
+                        onChange={(e) => handleStatusChange(p, e.target.value as PropertyStatus)}
                         className={cn(
                           'rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs font-medium transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40',
                           `text-${statusTone[p.status] ?? 'neutral'}-700`,
                         )}
                       >
-                        {PROPERTY_STATUSES.map((s) => (
+                        {propertyStatusesForListingType(p.listingType).map((s) => (
                           <option key={s} value={s}>{propertyStatusLabel(s)}</option>
                         ))}
+                        {/* Keep a status that contradicts the listing type
+                            selectable so it can be corrected rather than
+                            silently vanishing from its own dropdown. */}
+                        {!isStatusValidForListingType(p.status, p.listingType) && (
+                          <option value={p.status}>{propertyStatusLabel(p.status)}</option>
+                        )}
                       </select>
                     </td>
                     <td className={tdClass}>
@@ -246,11 +269,33 @@ export function PropertiesSection() {
                     )}
                     <td className={tdClass}>{timeAgo(p.createdAt)}</td>
                     <td className={tdClass}>
-                      <RowActions
-                        viewUrl={`/properties/${p.slug}`}
-                        onEdit={() => { setEditing(p); setFormOpen(true); }}
-                        onDelete={() => setDeleting(p)}
-                      />
+                      <div className="flex items-center justify-end gap-1">
+                        {/* An explicit way in. Relying on the status dropdown to open
+                            the dialog meant there was no visible control anywhere
+                            for recording a deal. */}
+                        {p.status !== 'Sold' && p.status !== 'Rented' && (
+                          <button
+                            type="button"
+                            title={
+                              p.listingType === 'ForLease'
+                                ? 'Record a rental for this property'
+                                : 'Record a sale for this property'
+                            }
+                            onClick={() => {
+                              setTransactionProperty(p);
+                              setTransactionOutcome(p.listingType === 'ForLease' ? 'Rented' : 'Sold');
+                            }}
+                            className="rounded-lg border border-ink-200 px-2 py-1 text-xs font-medium text-ink-600 transition-colors hover:border-forest-500 hover:text-forest-600"
+                          >
+                            {p.listingType === 'ForLease' ? 'Record rental' : 'Record sale'}
+                          </button>
+                        )}
+                        <RowActions
+                          viewUrl={`/properties/${p.slug}`}
+                          onEdit={() => { setEditing(p); setFormOpen(true); }}
+                          onDelete={() => setDeleting(p)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -261,7 +306,25 @@ export function PropertiesSection() {
         <SectionFooter pageNumber={page} pageSize={PAGE_SIZE} totalCount={totalCount} onPageChange={setPage} />
       </CardTable>
 
-      <PropertyForm open={formOpen} property={editing} agents={agents} onClose={closeForm} />
+      <PropertyForm
+        open={formOpen}
+        property={editing}
+        agents={agents}
+        onClose={closeForm}
+        onRequestTransaction={(p, outcome) => {
+          setTransactionProperty(p);
+          setTransactionOutcome(outcome);
+        }}
+      />
+
+      <RecordTransactionDialog
+        property={transactionProperty}
+        outcome={transactionOutcome}
+        onClose={() => {
+          setTransactionProperty(null);
+          setTransactionOutcome(null);
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

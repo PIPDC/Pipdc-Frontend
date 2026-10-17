@@ -10,7 +10,12 @@ import { Spinner } from '../../components/ui/Spinner';
 import { DevelopmentUnitForm } from '../../components/forms/DevelopmentUnitForm';
 import { DevelopmentUpdateForm } from '../../components/forms/DevelopmentUpdateForm';
 import { useAdminDevelopmentProject, useDevelopmentUnits, useDevelopmentUpdates } from '../../hooks/queries';
-import { useDeleteDevelopmentUnit, useDeleteDevelopmentUpdate } from '../../hooks/mutations';
+import {
+  useDeleteDevelopmentUnit,
+  useDeleteDevelopmentUpdate,
+  useListDevelopmentProperty,
+  usePromoteDevelopmentUnit,
+} from '../../hooks/mutations';
 import { useToast } from '../../components/ui/Toast';
 import { extractApiError } from '../../services/api';
 import { formatPrice, formatDate } from '../../utils/format';
@@ -42,10 +47,19 @@ export function DevelopmentDetailPage() {
 
   const deleteUnit = useDeleteDevelopmentUnit();
   const deleteUpdate = useDeleteDevelopmentUpdate();
+  const promoteUnit = usePromoteDevelopmentUnit();
+  const listProperty = useListDevelopmentProperty();
+  // One id at a time so the row that is working shows its own spinner instead of
+  // every action on the table appearing to be in flight.
+  const [actingUnitId, setActingUnitId] = useState<number | null>(null);
 
   const project = projectQuery.data;
   const units = unitsQuery.data ?? [];
   const updates = updatesQuery.data ?? [];
+
+  // A unit needs a price before it can become a listing, so this is what the
+  // "listing status" card above the table reports on.
+  const listableUnitCount = units.filter((u) => u.isListable).length;
 
   const confirmDeleteUnit = async () => {
     if (!deletingUnit) return;
@@ -66,6 +80,43 @@ export function DevelopmentDetailPage() {
       setDeletingUpdate(null);
     } catch (err) {
       notify({ type: 'error', title: 'Could not delete update', description: extractApiError(err) });
+    }
+  };
+
+  // Turn a ready unit into its own listing. The listing is created unpublished;
+  // the next step publishes it.
+  const handleListUnit = async (u: DevelopmentUnit) => {
+    setActingUnitId(u.id);
+    try {
+      await promoteUnit.mutateAsync({ projectId: id, unitId: u.id });
+      notify({
+        type: 'success',
+        title: 'Listing created',
+        description: `"${u.unitIdentifier}" now has its own listing. Publish it to put it on the site.`,
+      });
+    } catch (err) {
+      notify({ type: 'error', title: 'Could not list unit', description: extractApiError(err) });
+    } finally {
+      setActingUnitId(null);
+    }
+  };
+
+  // Publishing is a separate, deliberate step: creating the listing must not by
+  // itself put an address on the public site.
+  const handlePublishUnit = async (u: DevelopmentUnit) => {
+    if (u.propertyId == null) return;
+    setActingUnitId(u.id);
+    try {
+      await listProperty.mutateAsync({ propertyId: u.propertyId, status: 'Available' });
+      notify({
+        type: 'success',
+        title: 'Listing published',
+        description: `"${u.unitIdentifier}" is now live on the site.`,
+      });
+    } catch (err) {
+      notify({ type: 'error', title: 'Could not publish listing', description: extractApiError(err) });
+    } finally {
+      setActingUnitId(null);
     }
   };
 
@@ -131,12 +182,12 @@ export function DevelopmentDetailPage() {
           </div>
           <div>
             <p className="text-xs font-medium text-ink-400">Developer</p>
-            <p className="mt-1 text-sm font-medium text-ink-700">{project.developer ?? 'â€”'}</p>
+            <p className="mt-1 text-sm font-medium text-ink-700">{project.developer ?? '—'}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-ink-400">Expected Completion</p>
             <p className="mt-1 text-sm font-medium text-ink-700">
-              {project.expectedCompletionDate ? formatDate(project.expectedCompletionDate) : 'â€”'}
+              {project.expectedCompletionDate ? formatDate(project.expectedCompletionDate) : '—'}
             </p>
           </div>
           <div>
@@ -145,6 +196,21 @@ export function DevelopmentDetailPage() {
           </div>
         </div>
       </Card>
+
+      {/* The project itself is the estate and is never listed. Its units are the
+          houses clients buy, so the listing prompts live on the units below. */}
+      {project.status === 'Completed' && (
+        <Card className="p-6">
+          <h2 className="text-sm font-semibold text-ink-900">Listing status</h2>
+          <p className="mt-1 text-sm text-ink-600">
+            {listableUnitCount === units.length && units.length > 0
+              ? `All ${units.length} units have the details a listing needs. Use "List unit" in the table below to create each listing, then "Publish" to put it on the site.`
+              : listableUnitCount === 0
+                ? `None of the ${units.length} units can be listed yet. Add a price and the unit details below, then list each one.`
+                : `${listableUnitCount} of ${units.length} units can be listed. The rest still need a price and unit details.`}
+          </p>
+        </Card>
+      )}
 
       {/* Units */}
       <CardTable
@@ -166,8 +232,10 @@ export function DevelopmentDetailPage() {
                 <tr className="border-b border-ink-100 bg-ink-50/60">
                   <th className={thClass}>Identifier</th>
                   <th className={thClass}>Type</th>
+                  <th className={thClass}>Beds/Baths</th>
                   <th className={thClass}>Status</th>
                   <th className={thClass}>Price</th>
+                  <th className={thClass}>Listing</th>
                   <th className={thClass}></th>
                 </tr>
               </thead>
@@ -179,10 +247,55 @@ export function DevelopmentDetailPage() {
                     </td>
                     <td className={tdClass}>{u.unitType}</td>
                     <td className={tdClass}>
+                      {u.bedrooms ?? '—'} / {u.bathrooms ?? '—'}
+                    </td>
+                    <td className={tdClass}>
                       <Badge tone={unitStatusTone(u.status)}>{unitStatusLabel(u.status)}</Badge>
                     </td>
                     <td className={tdClass}>
-                      {u.price != null ? formatPrice(u.price, u.currency) : 'â€”'}
+                      {u.price != null ? formatPrice(u.price, u.currency) : <span className="text-ink-400">Not set</span>}
+                    </td>
+                    <td className={tdClass}>
+                      {u.propertyId ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge tone={u.propertyStatus === 'Available' ? 'success' : 'neutral'}>
+                            {u.propertyStatus === 'Available' ? 'Listed' : `Listing: ${u.propertyStatus}`}
+                          </Badge>
+                          {u.propertyStatus !== 'Available' && (
+                            <button
+                              type="button"
+                              onClick={() => void handlePublishUnit(u)}
+                              disabled={actingUnitId === u.id}
+                              className="rounded-lg border border-ink-200 px-2 py-1 text-xs font-medium text-ink-600 transition-colors hover:border-forest-500 hover:text-forest-600 disabled:opacity-60"
+                            >
+                              {actingUnitId === u.id ? 'Publishing…' : 'Publish'}
+                            </button>
+                          )}
+                        </div>
+                      ) : !u.isListable ? (
+                        <span className="text-xs text-ink-500">
+                          Needs {u.missingDetails.join(', ').toLowerCase()}
+                        </span>
+                      ) : project.status !== 'Completed' ? (
+                        // Promotion runs when the project reaches Completed, so
+                        // promising "Ready to list" before that would be a badge
+                        // nothing acts on.
+                        <span className="text-xs text-ink-500">
+                          Ready once the project is completed
+                        </span>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge tone="warning">Ready to list</Badge>
+                          <button
+                            type="button"
+                            onClick={() => void handleListUnit(u)}
+                            disabled={actingUnitId === u.id}
+                            className="rounded-lg border border-ink-200 px-2 py-1 text-xs font-medium text-ink-600 transition-colors hover:border-forest-500 hover:text-forest-600 disabled:opacity-60"
+                          >
+                            {actingUnitId === u.id ? 'Listing…' : 'List unit'}
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td className={tdClass}>
                       <RowActions
@@ -232,7 +345,7 @@ export function DevelopmentDetailPage() {
                     </td>
                     <td className={tdClass}>{formatDate(u.updateDate)}</td>
                     <td className={tdClass}>
-                      {u.progressPercentage != null ? `${u.progressPercentage}%` : 'â€”'}
+                      {u.progressPercentage != null ? `${u.progressPercentage}%` : '—'}
                     </td>
                     <td className={tdClass}>{u.imageUrls.length}</td>
                     <td className={tdClass}>

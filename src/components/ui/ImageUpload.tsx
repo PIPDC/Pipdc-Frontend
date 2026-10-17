@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { imageService, type UploadResult } from '../../services/imageService';
 import { extractApiError } from '../../services/api';
 import { cn } from '../../utils/cn';

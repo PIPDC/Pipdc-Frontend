@@ -220,7 +220,7 @@ export function AgentEnquiriesSection({ title }: { title: string }) {
               <span>Submitted {formatDate(viewing.createdAt)}</span>
               <span className="flex items-center gap-2">
                 {viewing.isRead ? (
-                  <span>Read {viewing.agentReadAt ? `Â· ${formatDate(viewing.agentReadAt)}` : ''}</span>
+                  <span>Read {viewing.agentReadAt ? `· ${formatDate(viewing.agentReadAt)}` : ''}</span>
                 ) : (
                   <Badge tone="danger">Unread</Badge>
                 )}

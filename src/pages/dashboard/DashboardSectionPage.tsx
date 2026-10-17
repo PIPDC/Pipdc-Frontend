@@ -1,4 +1,4 @@
-﻿import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin, FileCheck2, Flag, Scale } from 'lucide-react';
+﻿import { Building2, Users, MessageSquare, Newspaper, UserCircle, Settings, Heart, MessagesSquare, HardHat, Radar, MapPin, FileCheck2, Flag, Scale, BarChart3, ShieldAlert, Bot, KeyRound, Handshake } from 'lucide-react';
 import { Breadcrumb } from '../../components/ui/Breadcrumb';
 import { useAuth } from '../../contexts/AuthContext';
 import { primaryRole } from '../../utils/roles';
@@ -18,7 +18,12 @@ import { ApplicationsSection } from '../../components/dashboard/sections/Applica
 import { AppealsSection } from '../../components/dashboard/sections/AppealsSection';
 import { MyAgentApplicationSection } from '../../components/dashboard/sections/MyAgentApplicationSection';
 import { ReportsSection } from '../../components/dashboard/sections/ReportsSection';
+import { AdminOperationsSection } from '../../components/dashboard/sections/AdminOperationsSection';
+import { EscalationsSection } from '../../components/dashboard/sections/EscalationsSection';
+import { ConciergeEscalationsSection } from '../../components/dashboard/sections/ConciergeEscalationsSection';
 import { MyReportsSection } from '../../components/dashboard/sections/MyReportsSection';
+import { TenantInfoSection } from '../../components/dashboard/sections/TenantInfoSection';
+import { PurchasersSection } from '../../components/dashboard/sections/PurchasersSection';
 
 export type DashboardSection =
   | 'properties'
@@ -37,6 +42,11 @@ export type DashboardSection =
   | 'saved'
   | 'developments'
   | 'tracked'
+  | 'statistics'
+  | 'tenants'
+  | 'purchasers'
+  | 'escalations'
+  | 'concierge-escalations'
   | 'locations';
 
 const config: Record<DashboardSection, { title: string; description: string }> = {
@@ -63,6 +73,17 @@ const config: Record<DashboardSection, { title: string; description: string }> =
   developments: { title: 'Developments', description: 'Manage development projects and track construction progress.' },
   tracked: { title: 'Tracked Projects', description: 'Development projects you are tracking.' },
   locations: { title: 'Locations', description: 'Manage the location hierarchy used across properties and developments.' },
+  statistics: { title: 'Statistics', description: 'Recorded sales and rentals, and how enquiries convert into deals.' },
+  tenants: { title: 'Tenants', description: 'Clients currently renting, with reminders before their lease expires.' },
+  purchasers: { title: 'Purchasers', description: 'Clients who have bought a property through PIPDC.' },
+  escalations: {
+    title: 'Escalations',
+    description: 'Conversations escalated to an administrator by the concierge.',
+  },
+  'concierge-escalations': {
+    title: 'Concierge Escalations',
+    description: 'AI assistant chats handed to PIPDC for a human follow-up.',
+  },
 };
 
 const agentDescriptions: Partial<Record<DashboardSection, string>> = {
@@ -88,6 +109,11 @@ const sectionIcons: Record<DashboardSection, React.ReactNode> = {
   developments: <HardHat className="h-5 w-5" />,
   tracked: <Radar className="h-5 w-5" />,
   locations: <MapPin className="h-5 w-5" />,
+  statistics: <BarChart3 className="h-5 w-5" />,
+  tenants: <KeyRound className="h-5 w-5" />,
+  purchasers: <Handshake className="h-5 w-5" />,
+  escalations: <ShieldAlert className="h-5 w-5" />,
+  'concierge-escalations': <Bot className="h-5 w-5" />,
 };
 
 export function DashboardSectionPage({ section }: { section: DashboardSection }) {
@@ -123,6 +149,11 @@ export function DashboardSectionPage({ section }: { section: DashboardSection })
       {section === 'developments' && <DevelopmentsSection />}
       {section === 'tracked' && <TrackedDevelopmentsSection />}
       {section === 'locations' && <LocationsSection />}
+      {section === 'statistics' && <AdminOperationsSection />}
+      {section === 'tenants' && <TenantInfoSection />}
+      {section === 'purchasers' && <PurchasersSection />}
+      {section === 'escalations' && <EscalationsSection />}
+      {section === 'concierge-escalations' && <ConciergeEscalationsSection />}
     </div>
   );
 }

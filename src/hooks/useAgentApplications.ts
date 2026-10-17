@@ -64,6 +64,10 @@ export function useWithdrawAgentApplication() {
       // form reappears immediately instead of flashing the deleted application.
       qc.setQueryData([...AGENT_APPLICATIONS_KEY, 'current'], null);
       void qc.invalidateQueries({ queryKey: [...AGENT_APPLICATIONS_KEY, 'mine'] });
+      // Withdrawing deletes the rejected application, which is what makes the
+      // account eligible to apply again. Without this the eligibility check stays
+      // cached at its old value and the user is still told they may not apply.
+      void qc.invalidateQueries({ queryKey: [...AGENT_APPLICATIONS_KEY, 'eligibility'] });
     },
   });
 }

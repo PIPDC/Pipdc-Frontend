@@ -1,25 +1,13 @@
 import { useState } from "react";
-import {
-  ArrowLeft,
-  BarChart3,
-  CheckCircle2,
-  MessageSquare,
-  RefreshCw,
-  ShieldAlert,
-} from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
-import {
-  useClaimConversation,
-  useEscalationQueue,
-} from "../../../hooks/useConversationEscalation";
-import { useTransactionAnalytics } from "../../../hooks/useTransactions";
-import { extractApiError } from "../../../services/api";
+import { BarChart3 } from "lucide-react";
+import { useTransactionAnalytics, useTransactions } from "../../../hooks/useTransactions";
 import { Badge } from "../../ui/Badge";
-import { Button } from "../../ui/Button";
-import { EmptyState } from "../../ui/EmptyState";
-import { useToast } from "../../ui/Toast";
-import { ConversationView } from "../../messaging/ConversationView";
-import type { Conversation, TransactionAnalytics } from "../../../types";
+import { LoadingRows, SectionFooter, tdClass, thClass } from "./shared";
+import type {
+  Transaction,
+  TransactionAnalytics,
+  TransactionKind,
+} from "../../../types";
 
 const numberFormat = new Intl.NumberFormat("en-NG");
 const moneyFormat = new Intl.NumberFormat("en-NG", {
@@ -151,54 +139,127 @@ function AnalyticsPanel({ analytics }: { analytics: TransactionAnalytics }) {
   );
 }
 
-export function AdminOperationsSection() {
-  const { user } = useAuth();
-  const { notify } = useToast();
-  const [selected, setSelected] = useState<Conversation | null>(null);
-  const queueQuery = useEscalationQueue({ pageNumber: 1, pageSize: 50 });
-  const analyticsQuery = useTransactionAnalytics();
-  const claim = useClaimConversation();
-  const queue = queueQuery.data?.items ?? [];
+/**
+ * The aggregates above answer "how much". An admin also needs "who": which client
+ * bought or rented which property, and when. Without this the only way to find
+ * that out is to open each listing and remember what happened, which is exactly
+ * the question the transaction table is recorded to answer.
+ */
+function TransactionLedger() {
+  const [kind, setKind] = useState<TransactionKind | "">("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const transactionsQuery = useTransactions({
+    kind: kind || undefined,
+    page,
+    pageSize,
+  });
 
-  if (selected)
-    return (
-      <div className="space-y-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          leftIcon={<ArrowLeft className="h-4 w-4" />}
-          onClick={() => setSelected(null)}
+  const transactions = transactionsQuery.data?.items ?? [];
+  const totalCount = transactionsQuery.data?.totalCount ?? 0;
+
+  const counterparty = (t: Transaction) =>
+    t.kind === "Sale" ? (t.buyerName ?? "Unknown buyer") : (t.tenantName ?? "Unknown tenant");
+
+  return (
+    <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink-900">
+            Who bought or rented what
+          </h2>
+          <p className="text-sm text-ink-500">
+            Every recorded deal, newest first.
+          </p>
+        </div>
+        <select
+          value={kind}
+          onChange={(event) => {
+            setKind(event.target.value as TransactionKind | "");
+            setPage(1);
+          }}
+          className="rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40"
         >
-          Back to operations
-        </Button>
-        <ConversationView
-          conversation={selected}
-          currentUserId={user?.id ?? ""}
-          canSend={false}
-          isAdmin
-          isAssignedAgent={false}
-          onBack={() => setSelected(null)}
-        />
+          <option value="">Sales and rentals</option>
+          <option value="Sale">Sales only</option>
+          <option value="Lease">Rentals only</option>
+        </select>
       </div>
-    );
 
-  const claimCase = async (conversation: Conversation) => {
-    try {
-      const claimed = await claim.mutateAsync(conversation.id);
-      setSelected(claimed);
-      notify({
-        type: "success",
-        title: "Case claimed",
-        description: "The conversation is ready for your response.",
-      });
-    } catch (error) {
-      notify({
-        type: "error",
-        title: "Could not claim case",
-        description: extractApiError(error),
-      });
-    }
-  };
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th className={thClass}>Client</th>
+              <th className={thClass}>Property</th>
+              <th className={thClass}>Deal</th>
+              <th className={thClass}>Value</th>
+              <th className={thClass}>Date</th>
+              <th className={thClass}>Recorded by</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactionsQuery.isLoading ? (
+              <LoadingRows rows={6} />
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={6} className={tdClass}>
+                  No transactions recorded yet.
+                </td>
+              </tr>
+            ) : (
+              transactions.map((t) => (
+                <tr key={`${t.kind}-${t.id}`}>
+                  <td className={tdClass}>
+                    <span className="font-medium text-ink-900">{counterparty(t)}</span>
+                    {t.counterpartyUserId ? (
+                      <span className="block text-xs text-ink-400">Registered client</span>
+                    ) : (
+                      <span className="block text-xs text-amber-600">No client account</span>
+                    )}
+                  </td>
+                  <td className={tdClass}>
+                    {t.propertyTitle}
+                    <span className="block text-xs text-ink-400">
+                      {[t.propertyCity, t.propertyState].filter(Boolean).join(", ")}
+                    </span>
+                  </td>
+                  <td className={tdClass}>
+                    <Badge tone={t.kind === "Sale" ? "forest" : "gold"}>
+                      {t.kind === "Sale" ? "Sold" : "Rented"}
+                    </Badge>
+                    <span className="block text-xs text-ink-400">{t.statusLabel}</span>
+                  </td>
+                  <td className={tdClass}>
+                    {t.kind === "Sale" && t.salePrice != null
+                      ? `${t.currency} ${moneyFormat.format(t.salePrice)}`
+                      : t.monthlyRent != null
+                        ? `${t.currency} ${moneyFormat.format(t.monthlyRent)}/mo`
+                        : "—"}
+                  </td>
+                  <td className={tdClass}>
+                    {(t.saleDate ?? t.leaseStartDate ?? t.createdAt).slice(0, 10)}
+                  </td>
+                  <td className={tdClass}>{t.recordedByName}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <SectionFooter
+        pageNumber={page}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        onPageChange={setPage}
+      />
+    </section>
+  );
+}
+
+export function AdminOperationsSection() {
+  const analyticsQuery = useTransactionAnalytics();
 
   return (
     <div className="space-y-8">
@@ -213,89 +274,7 @@ export function AdminOperationsSection() {
       ) : analyticsQuery.data ? (
         <AnalyticsPanel analytics={analyticsQuery.data} />
       ) : null}
-      <section className="rounded-2xl border border-ink-100 bg-white shadow-soft">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 p-5">
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-gold-600" />
-            <div>
-              <h2 className="font-display text-lg font-bold text-ink-900">
-                Concierge escalations
-              </h2>
-              <p className="text-sm text-ink-500">
-                Claim an escalated conversation to respond and resolve it.
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => {
-              void queueQuery.refetch();
-              void analyticsQuery.refetch();
-            }}
-          >
-            Refresh
-          </Button>
-        </div>
-        {queueQuery.isLoading ? (
-          <div className="p-6 text-sm text-ink-500">Loading escalations...</div>
-        ) : queue.length === 0 ? (
-          <EmptyState
-            icon={<CheckCircle2 className="h-6 w-6" />}
-            title="No escalated conversations"
-            description="New concierge handoffs will appear here."
-          />
-        ) : (
-          <div className="divide-y divide-ink-50">
-            {queue.map((conversation) => (
-              <div
-                key={conversation.id}
-                className="flex flex-wrap items-center justify-between gap-4 p-5"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-forest-600" />
-                    <p className="font-semibold text-ink-900">
-                      {conversation.client.fullName}
-                    </p>
-                    <Badge
-                      tone={
-                        conversation.escalationStatus === "Assigned"
-                          ? "success"
-                          : "warning"
-                      }
-                    >
-                      {conversation.escalationStatus}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 truncate text-sm text-ink-600">
-                    {conversation.property.title}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-ink-500">
-                    {conversation.escalationReason ?? "No reason provided"}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  loading={
-                    claim.isPending && claim.variables === conversation.id
-                  }
-                  onClick={() =>
-                    conversation.escalationStatus === "Escalated"
-                      ? claimCase(conversation)
-                      : setSelected(conversation)
-                  }
-                >
-                  {conversation.escalationStatus === "Escalated"
-                    ? "Claim case"
-                    : "Open case"}
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <TransactionLedger />
     </div>
   );
 }

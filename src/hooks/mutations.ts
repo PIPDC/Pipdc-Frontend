@@ -5,10 +5,12 @@ import { blogService } from '../services/blogService';
 import { enquiryService } from '../services/enquiryService';
 import { locationService } from '../services/locationService';
 import { messageService } from '../services/messageService';
+import { notificationService } from '../services/notificationService';
 import { propertyService } from '../services/propertyService';
 import { developmentService } from '../services/developmentService';
 import { userService } from '../services/userService';
 import { aiChatService } from '../services/aiChatService';
+import type { ConciergeContactPreference } from '../types';
 import { isConcurrencyConflict } from '../services/api';
 import { queryKeys } from './queries';
 
@@ -312,6 +314,39 @@ export function useMarkConversationRead() {
 
 // ── Development Projects ─────────────────────────────────────────────────
 
+/**
+ * The explicit admin half of the development listing prompt.
+ *
+ * Moving a development project to Completed only notifies the admin; it never
+ * publishes anything. Publishing happens here, when the admin decides to list
+ * the linked property, by promoting it to Available through the existing
+ * property status endpoint. Deliberately not automatic.
+ */
+export function useListDevelopmentProperty() {
+  const invalidate = useInvalidate([
+    ['properties'],
+    ['agents'],
+    ['dashboard'],
+    ['development-projects'],
+    ['development-notifications'],
+  ]);
+  return useMutation({
+    mutationFn: ({ propertyId, status }: { propertyId: number; status: string }) =>
+      propertyService.changeStatus(propertyId, status),
+    onSuccess: invalidate,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => notificationService.markRead(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
 export function useCreateDevelopmentProject() {
   const invalidate = useInvalidate([['development-projects'], ['dashboard']]);
   return useMutation({
@@ -321,7 +356,10 @@ export function useCreateDevelopmentProject() {
 }
 
 export function useUpdateDevelopmentProject() {
-  const invalidate = useInvalidate([['development-projects'], ['dashboard']]);
+  // A status change can produce an admin notification, so the notification feed
+  // has to be invalidated too; otherwise the prompt that was just generated stays
+  // invisible until the poll interval happens to fire.
+  const invalidate = useInvalidate([['development-projects'], ['dashboard'], ['development-notifications']]);
   const refetchOnConflict = useRefetchOnConflict([['development-projects'], ['dashboard']]);
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => developmentService.update(id, payload),
@@ -363,6 +401,14 @@ export function useUpdateDevelopmentUnit() {
   return useMutation({
     mutationFn: ({ projectId, unitId, payload }: { projectId: number; unitId: number; payload: Record<string, unknown> }) =>
       developmentService.updateUnit(projectId, unitId, payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function usePromoteDevelopmentUnit() {
+  const invalidate = useInvalidate([['development-projects'], ['development-tracking']]);
+  return useMutation({
+    mutationFn: ({ projectId, unitId }: { projectId: number; unitId: number }) => developmentService.promoteUnit(projectId, unitId),
     onSuccess: invalidate,
   });
 }
@@ -447,6 +493,17 @@ export function useSendAiMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (content: string) => aiChatService.sendMessage(content),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.aiSession, data.session);
+    },
+  });
+}
+
+export function useSubmitContactPreference() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { choice: ConciergeContactPreference; phone?: string }) =>
+      aiChatService.submitContactPreference(payload.choice, payload.phone),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.aiSession, data.session);
     },

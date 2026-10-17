@@ -6,6 +6,7 @@ import { dashboardService } from '../services/dashboardService';
 import { enquiryService, type EnquiryFilters } from '../services/enquiryService';
 import { locationService, type LocationListParams } from '../services/locationService';
 import { messageService } from '../services/messageService';
+import { notificationService } from '../services/notificationService';
 import { propertyService } from '../services/propertyService';
 import { savedPropertyService, type SavedPropertyFilters } from '../services/savedPropertyService';
 import { userService, type UserFilters } from '../services/userService';
@@ -56,6 +57,7 @@ export const queryKeys = {
   adminDevelopmentTracking: (filters?: DevelopmentTrackingFilters) => ['admin-development-tracking', filters] as const,
   locations: (params?: LocationListParams) => ['locations', params] as const,
   locationHierarchy: ['locations', 'hierarchy'] as const,
+  notifications: ['development-notifications'] as const,
   aiSession: ['ai-chat', 'session'] as const,
 };
 
@@ -70,11 +72,11 @@ export function useProperties(filters: PropertyFilters) {
   });
 }
 
-export function useProperty(slug: string | undefined) {
+export function useProperty(slug: string | undefined, enabled: boolean = true) {
   return useQuery({
     queryKey: queryKeys.property(slug ?? ''),
     queryFn: () => propertyService.getBySlug(slug!),
-    enabled: Boolean(slug),
+    enabled: Boolean(slug) && enabled,
   });
 }
 
@@ -355,9 +357,31 @@ export function useLocationHierarchy() {
 }
 
 export function useAiSession() {
+  // The endpoint is authorised, so fetching it while signed out only produces a
+  // 401 and a pointless refresh attempt on every public page.
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: queryKeys.aiSession,
     queryFn: aiChatService.getSession,
     retry: false,
+    enabled: !isRestoring && isAuthenticated,
+  });
+}
+
+// ── Notifications ───────────────────────────────────────────────────────
+
+/**
+ * The admin prompt feed. Polled on a slow interval rather than pushed: the
+ * backend exposes no notification stream, and a development completion is a
+ * low-frequency event where a short delay is acceptable. Authenticated, so it
+ * is disabled for signed-out sessions.
+ */
+export function useNotifications(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.notifications,
+    queryFn: notificationService.list,
+    enabled,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 }

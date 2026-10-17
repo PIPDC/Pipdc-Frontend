@@ -104,19 +104,19 @@ export function BlogSection() {
                       <span className="block text-xs text-ink-400">/{post.slug}</span>
                     </td>
                     <td className={tdClass}>
-                      {post.categoryName ? <Badge tone="forest">{post.categoryName}</Badge> : <span className="text-xs text-ink-300">â€”</span>}
+                      {post.categoryName ? <Badge tone="forest">{post.categoryName}</Badge> : <span className="text-xs text-ink-300">—</span>}
                     </td>
                     <td className={tdClass}>
                       <div className="flex flex-wrap gap-1">
                         {post.tags.length > 0 ? post.tags.map((tag) => (
                           <Badge key={tag.id} tone="neutral">{tag.name}</Badge>
-                        )) : <span className="text-xs text-ink-300">â€”</span>}
+                        )) : <span className="text-xs text-ink-300">—</span>}
                       </div>
                     </td>
                     <td className={tdClass}>
                       <Badge tone={post.status === 'Published' ? 'forest' : post.status === 'Draft' ? 'gold' : 'neutral'}>{post.status}</Badge>
                     </td>
-                    <td className={tdClass}>{post.publishedAt ? formatDate(post.publishedAt) : 'â€”'}</td>
+                    <td className={tdClass}>{post.publishedAt ? formatDate(post.publishedAt) : '—'}</td>
                     <td className={tdClass}>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button

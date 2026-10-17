@@ -10,6 +10,31 @@ import { useToast } from '../ui/Toast';
 import { extractApiError } from '../../services/api';
 import { DEVELOPMENT_UNIT_STATUS_OPTIONS, unitStatusLabel } from '../../utils/developmentStatus';
 import type { DevelopmentUnit } from '../../types/development';
+import type { PropertyType } from '../../types';
+
+// Mirrors PropertyForm, because a unit is what gets listed and must be able to
+// carry the same description of the house.
+const propertyTypes: PropertyType[] = [
+  'Detached House',
+  'Semi-Detached',
+  'Terrace',
+  'Apartment',
+  'Penthouse',
+  'Villa',
+  'Mansion',
+  'Land',
+  'Commercial',
+  'Townhouse',
+  'Residential',
+  'Industrial',
+  'Mixed',
+];
+
+const listingTypes = ['ForSale', 'ForLease'] as const;
+const sizeUnits = ['sqm', 'sqft'] as const;
+
+const optionalNumber = z.number({ message: 'Enter a valid number' }).int().min(0).optional();
+const optionalDecimal = z.number({ message: 'Enter a valid number' }).min(0).optional();
 
 const schema = z.object({
   unitIdentifier: z.string().min(1, 'Unit identifier is required').max(50),
@@ -18,11 +43,27 @@ const schema = z.object({
   price: z.number({ message: 'Enter a valid price' }).min(0).optional(),
   currency: z.string().optional(),
   description: z.string().optional(),
+  listingType: z.enum(listingTypes),
+  propertyType: z.enum(propertyTypes as [PropertyType, ...PropertyType[]]),
+  period: z.string().optional(),
+  bedrooms: optionalNumber,
+  bathrooms: optionalNumber,
+  size: optionalDecimal,
+  sizeUnit: z.enum(sizeUnits),
+  yearBuilt: optionalNumber,
+  amenities: z.string().optional(),
 });
 
 type UnitFormValues = z.infer<typeof schema>;
 
 const toOptionalNumber = (value: unknown) => (value === '' || value === null || value === undefined ? undefined : Number(value));
+
+// Entered as free text for convenience, sent as a clean list.
+const parseAmenities = (value?: string) =>
+  (value ?? '')
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean);
 
 interface DevelopmentUnitFormProps {
   open: boolean;
@@ -51,6 +92,17 @@ export function DevelopmentUnitForm({ open, projectId, unit, onClose }: Developm
         price: unit.price ?? undefined,
         currency: unit.currency ?? 'NGN',
         description: unit.description ?? '',
+        listingType: unit.listingType === 'ForLease' ? 'ForLease' : 'ForSale',
+        propertyType: propertyTypes.includes(unit.propertyType as PropertyType)
+          ? (unit.propertyType as PropertyType)
+          : 'Residential',
+        period: unit.period ?? '',
+        bedrooms: unit.bedrooms ?? undefined,
+        bathrooms: unit.bathrooms ?? undefined,
+        size: unit.size ?? undefined,
+        sizeUnit: unit.sizeUnit === 'sqft' ? 'sqft' : 'sqm',
+        yearBuilt: unit.yearBuilt ?? undefined,
+        amenities: (unit.amenities ?? []).join(', '),
       });
     } else {
       reset({
@@ -60,6 +112,15 @@ export function DevelopmentUnitForm({ open, projectId, unit, onClose }: Developm
         price: undefined,
         currency: 'NGN',
         description: '',
+        listingType: 'ForSale',
+        propertyType: 'Residential',
+        period: '',
+        bedrooms: undefined,
+        bathrooms: undefined,
+        size: undefined,
+        sizeUnit: 'sqm',
+        yearBuilt: undefined,
+        amenities: '',
       });
     }
   }, [open, unit, reset]);
@@ -72,6 +133,15 @@ export function DevelopmentUnitForm({ open, projectId, unit, onClose }: Developm
       price: data.price,
       currency: data.currency || 'NGN',
       description: data.description?.trim() || undefined,
+      listingType: data.listingType,
+      propertyType: data.propertyType,
+      period: data.period?.trim() || undefined,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      size: data.size,
+      sizeUnit: data.sizeUnit,
+      yearBuilt: data.yearBuilt,
+      amenities: parseAmenities(data.amenities),
     };
 
     try {
@@ -114,6 +184,42 @@ export function DevelopmentUnitForm({ open, projectId, unit, onClose }: Developm
         </div>
 
         <Input label="Price" type="number" step="any" placeholder="0" error={errors.price?.message} {...register('price', { setValueAs: toOptionalNumber })} />
+
+        <p className="rounded-lg bg-gold-50 px-3 py-2 text-xs text-ink-700">
+          When this project is completed, a unit with a price becomes a listing of
+          its own. Fill in the details below so the listing is complete when it appears.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <Select label="Listing type" error={errors.listingType?.message} {...register('listingType')}>
+            {listingTypes.map((t) => (
+              <option key={t} value={t}>{t === 'ForSale' ? 'For sale' : 'For rent'}</option>
+            ))}
+          </Select>
+          <Select label="Property type" error={errors.propertyType?.message} {...register('propertyType')}>
+            {propertyTypes.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <Input label="Bedrooms" type="number" placeholder="e.g. 4" error={errors.bedrooms?.message} {...register('bedrooms', { setValueAs: toOptionalNumber })} />
+          <Input label="Bathrooms" type="number" placeholder="e.g. 3" error={errors.bathrooms?.message} {...register('bathrooms', { setValueAs: toOptionalNumber })} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Input label="Size" type="number" step="any" placeholder="e.g. 180" error={errors.size?.message} {...register('size', { setValueAs: toOptionalNumber })} />
+          <Select label="Size unit" error={errors.sizeUnit?.message} {...register('sizeUnit')}>
+            {sizeUnits.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </Select>
+          <Input label="Year built" type="number" placeholder="e.g. 2026" error={errors.yearBuilt?.message} {...register('yearBuilt', { setValueAs: toOptionalNumber })} />
+        </div>
+
+        <Input label="Rental period" placeholder="e.g. Per annum" error={errors.period?.message} {...register('period')} />
+        <Input label="Amenities" placeholder="Comma separated, e.g. 24/7 power, gated estate, fitted kitchen" error={errors.amenities?.message} {...register('amenities')} />
 
         <Textarea label="Description" placeholder="Optional description for this unit." className="min-h-[80px]" error={errors.description?.message} {...register('description')} />
 

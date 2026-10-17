@@ -474,11 +474,63 @@ export interface AiChatSession {
   title: string | null;
   lastMessageAt: string;
   messages: AiChatMessage[];
+  /** Present when the concierge has handed this chat to PIPDC. */
+  escalation?: ConciergeEscalation | null;
+  /**
+   * Set when the concierge wants to hand the chat over but must first ask how the
+   * client wants to be contacted. While present, the client picks a channel and
+   * the handoff completes; a fresh chat message cancels it.
+   */
+  contactPromptReason?: string | null;
 }
 
 export interface SendAiMessageResponse {
   session: AiChatSession;
   assistantMessage: AiChatMessage;
+  /** Present when this turn triggered a handoff to PIPDC. */
+  escalation?: ConciergeEscalation | null;
+  /** Present when the handoff is waiting for the client to pick a contact channel. */
+  contactPromptReason?: string | null;
+}
+
+// ============================================================
+// Concierge escalations (AI assistant handoffs)
+// ============================================================
+
+/** Mirrors the backend `ConciergeEscalationStatus`. */
+export type ConciergeEscalationStatus = 'Escalated' | 'Assigned' | 'Resolved';
+
+/** Mirrors the backend `ConciergeContactPreference`. */
+export type ConciergeContactPreference = 'Email' | 'EmailAndPhone';
+
+/** A row in the admin's concierge escalation queue. */
+export interface ConciergeEscalation {
+  id: number;
+  aiChatSessionId: number;
+  clientUserId: string;
+  clientName: string;
+  clientEmail: string;
+  /** The number the client shared (or the one on their account); null if email-only. */
+  clientPhone: string | null;
+  /** How the client asked the team to contact them. */
+  contactPreference: ConciergeContactPreference | null;
+  status: ConciergeEscalationStatus;
+  escalationReason: string;
+  escalatedAt: string;
+  assignedAdminId: string | null;
+  assignedAdminName: string | null;
+  assignedAt: string | null;
+  resolvedByUserId: string | null;
+  resolvedByName: string | null;
+  resolvedAt: string | null;
+  lastMessageAt: string | null;
+  messageCount: number;
+}
+
+/** The case plus the full transcript of the chat that preceded the escalation. */
+export interface ConciergeEscalationDetail {
+  escalation: ConciergeEscalation;
+  messages: AiChatMessage[];
 }
 
 // ============================================================
@@ -511,13 +563,15 @@ export interface Transaction {
   salePrice: number | null;
   saleDate: string | null;
   buyerName: string | null;
-  buyerContact: string | null;
+  buyerEmail: string | null;
+  buyerPhone: string | null;
 
   leaseStartDate: string | null;
   leaseEndDate: string | null;
   monthlyRent: number | null;
   tenantName: string | null;
-  tenantContact: string | null;
+  tenantEmail: string | null;
+  tenantPhone: string | null;
 
   /** Registered account of the buyer/tenant, derived server-side from the enquiry. */
   counterpartyUserId: string | null;
@@ -532,7 +586,8 @@ export interface RecordSalePayload {
   salePrice: number;
   saleDate: string;
   buyerName: string;
-  buyerContact: string;
+  buyerEmail: string;
+  buyerPhone: string;
   notes?: string | null;
   status?: TransactionStatus;
   enquiryId?: number | null;
@@ -541,13 +596,72 @@ export interface RecordSalePayload {
 /** Body for `POST /transactions/properties/{id}/leases`. Carries no user ids. */
 export interface RecordLeasePayload {
   tenantName: string;
-  tenantContact: string;
+  tenantEmail: string;
+  tenantPhone: string;
   monthlyRent: number;
   leaseStartDate: string;
   leaseEndDate: string;
   notes?: string | null;
   status?: TransactionStatus;
   enquiryId?: number | null;
+}
+
+/** A tenant currently occupying one of our rented properties. */
+export interface TenantInfo {
+  leaseId: number;
+  tenantName: string;
+  tenantEmail: string;
+  tenantPhone: string;
+  tenantUserId: string | null;
+
+  propertyId: number;
+  propertyTitle: string;
+  propertySlug: string;
+  propertyCity: string;
+  propertyState: string;
+  currency: string;
+
+  monthlyRent: number;
+  leaseStartDate: string;
+  leaseEndDate: string;
+  status: TransactionStatus;
+  statusLabel: string;
+
+  /** Whole days until the lease ends; negative once it has passed. */
+  daysRemaining: number;
+  /** True when the lease is within the reminder window (a month). */
+  reminderDue: boolean;
+  /** When a reminder was last sent, if one ever was. */
+  reminderSentAt: string | null;
+}
+
+/** A client who purchased one of our properties. */
+export interface PurchaserInfo {
+  saleId: number;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string;
+  buyerUserId: string | null;
+
+  propertyId: number;
+  propertyTitle: string;
+  propertySlug: string;
+  propertyCity: string;
+  propertyState: string;
+  currency: string;
+
+  salePrice: number;
+  saleDate: string;
+  status: TransactionStatus;
+  statusLabel: string;
+}
+
+/** Result of the manual "notify tenant" action. */
+export interface NotifyTenantResult {
+  leaseId: number;
+  tenantName: string;
+  tenantEmail: string;
+  daysRemaining: number;
 }
 
 export interface TransactionFilters {

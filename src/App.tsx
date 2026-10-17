@@ -165,6 +165,46 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: 'statistics',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="statistics" />
+          </AdminGuard>
+        ),
+      },
+      {
+        path: 'tenants',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="tenants" />
+          </AdminGuard>
+        ),
+      },
+      {
+        path: 'purchasers',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="purchasers" />
+          </AdminGuard>
+        ),
+      },
+      {
+        path: 'escalations',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="escalations" />
+          </AdminGuard>
+        ),
+      },
+      {
+        path: 'concierge-escalations',
+        element: (
+          <AdminGuard>
+            <DashboardSectionPage section="concierge-escalations" />
+          </AdminGuard>
+        ),
+      },
+      {
         path: 'enquiries',
         element: (
           <StaffGuard>
