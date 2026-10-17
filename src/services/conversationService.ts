@@ -39,6 +39,14 @@ export const conversationService = {
   resolveEnquiryForProperty,
   getConversationForEnquiry,
 
+  // Opens (or reuses) the client's conversation about a property. Messaging is
+  // independent of enquiries now, so this needs only a property id. The server
+  // keys the thread on (client, agent, property), so repeat calls are safe.
+  async start(propertyId: number): Promise<number> {
+    const { data } = await api.post<{ conversationId: number }>('/conversations/start', { propertyId });
+    return data.conversationId;
+  },
+
   // ------------------------------------------------------------
   // Batch 6: handing a conversation to PIPDC
   // ------------------------------------------------------------

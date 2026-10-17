@@ -10,9 +10,11 @@ interface MessageListProps {
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
+  /** Copy shown inside an empty thread, so a fresh conversation still guides the user. */
+  emptyMessage?: string;
 }
 
-export function MessageList({ messages, currentUserId, isLoading, isError, onRetry }: MessageListProps) {
+export function MessageList({ messages, currentUserId, isLoading, isError, onRetry, emptyMessage }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,7 +44,9 @@ export function MessageList({ messages, currentUserId, isLoading, isError, onRet
       ) : messages.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <MessageSquare className="h-6 w-6 text-ink-300" />
-          <p className="text-sm text-ink-500">No messages yet. Start the conversation.</p>
+          <p className="text-sm text-ink-500">
+            {emptyMessage ?? "No messages yet. Start the conversation."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

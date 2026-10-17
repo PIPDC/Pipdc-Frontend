@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, MessagesSquare, RefreshCw } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  MessagesSquare,
+  RefreshCw,
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { primaryRole } from "../../utils/roles";
 import {
@@ -24,29 +29,29 @@ import { ConversationList } from "./ConversationList";
 import { ConversationView } from "./ConversationView";
 import { NewConversationView } from "./NewConversationView";
 
+const parseId = (value: string | null | undefined): number | null =>
+  value && /^\d+$/.test(value) ? Number(value) : null;
+
 export function MessagingSection() {
   const { user } = useAuth();
   const { notify } = useToast();
+  const navigate = useNavigate();
+  const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const role = primaryRole(user?.roles);
 
-  const conversationParam = searchParams.get("conversation");
+  // Selection is URL-driven: the open conversation is the :conversationId path
+  // segment. The legacy ?conversation= query is still honoured so any older
+  // link keeps working.
   const selectedId =
-    conversationParam && /^\d+$/.test(conversationParam)
-      ? Number(conversationParam)
-      : null;
+    parseId(params.conversationId) ?? parseId(searchParams.get("conversation"));
 
   useConversationSubscription(selectedId);
   useNewMessageListener();
   useEscalationChangeListener();
 
-  const enquiryParam = searchParams.get("enquiry");
-  const enquiryId =
-    enquiryParam && /^\d+$/.test(enquiryParam) ? Number(enquiryParam) : null;
-
-  const propertyParam = searchParams.get("property");
-  const propertyId =
-    propertyParam && /^\d+$/.test(propertyParam) ? Number(propertyParam) : null;
+  const enquiryId = parseId(searchParams.get("enquiry"));
+  const propertyId = parseId(searchParams.get("property"));
 
   const conversationsQuery = useConversations();
   const listItems = conversationsQuery.data?.items ?? [];
@@ -62,6 +67,9 @@ export function MessagingSection() {
     (selectedId !== null
       ? (listItems.find((c) => c.id === selectedId) ?? conversationDetail.data)
       : undefined);
+  // The id was not in the list and fetching it failed: it is invalid, or the
+  // viewer is not a participant. That is a not-found state, not "nothing chosen".
+  const detailFailed = needsDetailFetch && conversationDetail.isError;
 
   const stateQuery = useEnquiryConversationState(enquiryId ?? undefined);
   const markRead = useMarkConversationRead();
@@ -70,28 +78,30 @@ export function MessagingSection() {
   const attemptedRead = useRef<number | null>(null);
   const [resolvingProperty, setResolvingProperty] = useState(false);
 
+  const closeConversation = () => {
+    if (params.conversationId)
+      navigate("/dashboard/messages", { replace: true });
+    else setSearchParams({}, { replace: true });
+  };
+
   useEffect(() => {
     if (justCreated && selectedId !== justCreated.id) setJustCreated(null);
   }, [justCreated, selectedId]);
 
-  // Opening an enquiry never creates a Conversation: the backend returns the messaging
-  // state read-only. If that enquiry already has a Conversation, canonicalize the URL to
-  // it so the conversation list drives the selection.
+  // Opening an enquiry never creates a Conversation: the backend returns the
+  // messaging state read-only. If that enquiry already has a Conversation, move
+  // to its canonical URL so the path param drives the selection.
   useEffect(() => {
     if (enquiryId === null || !stateQuery.data?.conversation) return;
     const conversationId = stateQuery.data.conversation.id;
     if (selectedId === conversationId) return;
-    setSearchParams(
-      { conversation: String(conversationId) },
-      { replace: true },
-    );
-  }, [enquiryId, stateQuery.data, selectedId, setSearchParams]);
+    navigate(`/dashboard/messages/${conversationId}`, { replace: true });
+  }, [enquiryId, stateQuery.data, selectedId, navigate]);
 
-  // Direct ?property= entry (e.g. after a login redirect) looks for an existing
-  // conversation about that property WITHOUT creating an enquiry. If the client
-  // has messaged about it before, the conversation is opened; if not, they are
-  // sent back to the property to use the enquiry form or start a conversation
-  // deliberately. Opening a conversation must not silently raise an enquiry.
+  // Direct ?property= entry looks for an existing conversation about that
+  // property WITHOUT creating an enquiry. If the client has messaged about it
+  // before, the conversation is opened; otherwise they are sent back to the
+  // property to start one deliberately with "Message agent".
   useEffect(() => {
     if (
       propertyId === null ||
@@ -108,10 +118,9 @@ export function MessagingSection() {
           notify({
             type: "info",
             title: "No conversation yet",
-            description:
-              "Send an enquiry or start a conversation from the property page.",
+            description: "Open the property and tap Message agent to start one.",
           });
-          setSearchParams({}, { replace: true });
+          navigate("/dashboard/messages", { replace: true });
           return;
         }
         return conversationService
@@ -122,15 +131,14 @@ export function MessagingSection() {
                 type: "info",
                 title: "No conversation yet",
                 description:
-                  "Send an enquiry or start a conversation from the property page.",
+                  "Open the property and tap Message agent to start one.",
               });
-              setSearchParams({}, { replace: true });
+              navigate("/dashboard/messages", { replace: true });
               return;
             }
-            setSearchParams(
-              { conversation: String(conversationId) },
-              { replace: true },
-            );
+            navigate(`/dashboard/messages/${conversationId}`, {
+              replace: true,
+            });
           });
       })
       .catch((err) => {
@@ -139,10 +147,10 @@ export function MessagingSection() {
           title: "Could not open conversation",
           description: extractApiError(err),
         });
-        setSearchParams({}, { replace: true });
+        navigate("/dashboard/messages", { replace: true });
       })
       .finally(() => setResolvingProperty(false));
-  }, [propertyId, user, notify, setSearchParams]);
+  }, [propertyId, user, notify, navigate]);
 
   useEffect(() => {
     if (
@@ -168,27 +176,22 @@ export function MessagingSection() {
   const hasActivePane =
     selectedId !== null || enquiryId !== null || resolvingProperty;
 
+  const loadingPane = (
+    <div className="flex h-[70dvh] min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white text-ink-500">
+      <span className="h-10 w-10 animate-spin rounded-full border-4 border-forest-500 border-t-transparent" />
+      <p className="text-sm">Opening conversation…</p>
+    </div>
+  );
+
   const renderPane = () => {
-    if (resolvingProperty) {
-      return (
-        <div className="flex h-[70dvh] min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white text-ink-500">
-          <span className="h-10 w-10 animate-spin rounded-full border-4 border-forest-500 border-t-transparent" />
-          <p className="text-sm">Opening conversation…</p>
-        </div>
-      );
-    }
+    if (resolvingProperty) return loadingPane;
 
     if (enquiryId !== null) {
       if (
         stateQuery.isLoading ||
         (stateQuery.data?.conversation && !selected)
       ) {
-        return (
-          <div className="flex h-[70dvh] min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white text-ink-500">
-            <span className="h-10 w-10 animate-spin rounded-full border-4 border-forest-500 border-t-transparent" />
-            <p className="text-sm">Loading…</p>
-          </div>
-        );
+        return loadingPane;
       }
 
       if (stateQuery.isError) {
@@ -220,35 +223,60 @@ export function MessagingSection() {
             canSend={canSend}
             onSent={(conversation) => {
               setJustCreated(conversation);
-              setSearchParams(
-                { conversation: String(conversation.id) },
-                { replace: true },
-              );
+              navigate(`/dashboard/messages/${conversation.id}`, {
+                replace: true,
+              });
             }}
-            onBack={() => setSearchParams({}, { replace: true })}
+            onBack={closeConversation}
           />
         );
       }
     }
 
-    if (selected) {
-      return (
-        <ConversationView
-          conversation={selected}
-          currentUserId={currentUserId}
-          canSend={canSend}
-          isAdmin={role === "Admin"}
-          isAssignedAgent={isAssignedAgent}
-          onBack={() => setSearchParams({}, { replace: true })}
-        />
-      );
+    if (selectedId !== null) {
+      if (selected) {
+        return (
+          <ConversationView
+            conversation={selected}
+            currentUserId={currentUserId}
+            canSend={canSend}
+            isAdmin={role === "Admin"}
+            isAssignedAgent={isAssignedAgent}
+            onBack={closeConversation}
+          />
+        );
+      }
+
+      if (detailFailed) {
+        return (
+          <EmptyState
+            icon={<AlertTriangle className="h-6 w-6" />}
+            title="Conversation not found"
+            description="This conversation does not exist, or you are not a participant in it."
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<ArrowLeft className="h-4 w-4" />}
+                onClick={closeConversation}
+              >
+                Back to conversations
+              </Button>
+            }
+          />
+        );
+      }
+
+      // Still fetching the conversation the URL points at: show a skeleton
+      // rather than the empty state, so selection never flickers back.
+      return loadingPane;
     }
 
     return (
       <EmptyState
         icon={<MessagesSquare className="h-6 w-6" />}
         title="Select a conversation"
-        description="Choose a conversation from the list to view its messages, or open one from your enquiries. A conversation begins with your first message."
+        description="Choose a conversation from the list to read and reply, or open a property and tap Message agent to start a new one."
       />
     );
   };
@@ -263,7 +291,7 @@ export function MessagingSection() {
           onRetry={() => conversationsQuery.refetch()}
           selectedId={selectedId}
           currentUserId={currentUserId}
-          onSelect={(id) => setSearchParams({ conversation: String(id) })}
+          onSelect={(id) => navigate(`/dashboard/messages/${id}`)}
         />
       </div>
       <div className={cn(!hasActivePane ? "hidden lg:block" : undefined)}>
