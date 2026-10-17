@@ -54,6 +54,9 @@ const adminItems = [
 const agentItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { label: 'My Properties', to: '/dashboard/properties', icon: Building2 },
+  { label: 'Statistics', to: '/dashboard/statistics', icon: BarChart3 },
+  { label: 'Tenants', to: '/dashboard/tenants', icon: KeyRound },
+  { label: 'Purchasers', to: '/dashboard/purchasers', icon: Handshake },
   { label: 'My Enquiries', to: '/dashboard/enquiries', icon: MessageSquare },
   { label: 'Messages', to: '/dashboard/messages', icon: MessagesSquare },
   { label: 'Saved Properties', to: '/dashboard/saved', icon: Heart },
