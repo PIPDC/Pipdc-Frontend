@@ -16,7 +16,9 @@ interface SearchFilterProps {
 const propertyTypes: (PropertyType | 'All')[] = [
   'All', 'Detached House', 'Semi-Detached', 'Terrace', 'Apartment', 'Penthouse', 'Villa', 'Mansion', 'Land', 'Commercial', 'Townhouse',
 ];
-const statuses: (PropertyStatus | 'All')[] = ['All', 'Available', 'Pending', 'Sold', 'Rented', 'Unavailable'];
+// "Sold" is deliberately absent: sold properties are withdrawn from the public
+// site, so offering the filter would only ever return an empty list.
+const statuses: (PropertyStatus | 'All')[] = ['All', 'Available', 'Pending', 'Rented', 'Unavailable'];
 const listingTypes = ['All', 'ForSale', 'ForLease'] as const;
 
 export function SearchFilter({ filters, onChange, onSearch, compact }: SearchFilterProps) {
