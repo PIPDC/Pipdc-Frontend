@@ -99,3 +99,28 @@ export function useNotifyTenant() {
     },
   });
 }
+
+/**
+ * Extends a live tenancy. The property stays rented, so the property caches are
+ * refreshed via the passed propertyId only to keep the tenant's lease dates in sync.
+ */
+export function useRenewLease() {
+  const invalidate = useInvalidateTransactions();
+  return useMutation({
+    mutationFn: ({ leaseId, newEndDate }: { leaseId: number; newEndDate: string; propertyId: number }) =>
+      transactionService.renewLease(leaseId, newEndDate),
+    onSuccess: (_data, { propertyId }) => invalidate(propertyId),
+  });
+}
+
+/**
+ * Ends a tenancy because the tenant has left. The property returns to Available,
+ * so the property list and detail caches are invalidated via the passed propertyId.
+ */
+export function useEndLease() {
+  const invalidate = useInvalidateTransactions();
+  return useMutation({
+    mutationFn: ({ leaseId }: { leaseId: number; propertyId: number }) => transactionService.endLease(leaseId),
+    onSuccess: (_data, { propertyId }) => invalidate(propertyId),
+  });
+}

@@ -93,6 +93,14 @@ export function PropertyForm({ open, property, agents, onClose, onRequestTransac
   });
 
   const isEditing = Boolean(property);
+  // Sold is final and Rented is held by a live tenancy, so neither may be edited
+  // away from this form. The server refuses the transition too; disabling it here
+  // stops the admin from hitting a wall after typing in every other field.
+  const statusLocked = isEditing && (property?.status === 'Sold' || property?.status === 'Rented');
+  const statusLockedReason =
+    property?.status === 'Sold'
+      ? 'A sold property is final and cannot be listed again.'
+      : 'This property is tenanted. End the tenancy on the Tenants page to free it.';
   const [images, setImages] = useState<UploadResult[]>([]);
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
@@ -357,7 +365,13 @@ export function PropertyForm({ open, property, agents, onClose, onRequestTransac
 
         <div className="grid gap-4 sm:grid-cols-4">
           <Input label="Period (for rentals)" placeholder="e.g. Per annum" error={errors.period?.message} {...register('period')} />
-          <Select label="Status" error={errors.status?.message} {...register('status')}>
+          <Select
+            label="Status"
+            error={errors.status?.message}
+            disabled={statusLocked}
+            title={statusLocked ? statusLockedReason : undefined}
+            {...register('status')}
+          >
             {/* Narrowed to the listing type: a sale cannot be Rented and a
                 rental cannot be Sold. */}
             {statusOptionsWithCurrent.map((s) => (
@@ -374,6 +388,8 @@ export function PropertyForm({ open, property, agents, onClose, onRequestTransac
             ))}
           </Select>
         </div>
+
+        {statusLocked && <p className="text-xs text-ink-500">{statusLockedReason}</p>}
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           <Input label="Bedrooms" type="number" placeholder="e.g. 4" error={errors.bedrooms?.message} {...register('bedrooms', { setValueAs: toOptionalNumber })} />

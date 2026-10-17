@@ -72,4 +72,19 @@ export const transactionService = {
     );
     return data;
   },
+
+  /**
+   * Admin-only. Pushes a live tenancy's end date out; the property stays rented.
+   * Not idempotent-keyed: renewing to the same date is already a server-side no-op.
+   */
+  async renewLease(leaseId: number, newEndDate: string): Promise<TenantInfo> {
+    const { data } = await api.post<TenantInfo>(`/transactions/leases/${leaseId}/renew`, { newEndDate });
+    return data;
+  },
+
+  /** Admin-only. Ends a tenancy and returns the property to the market. */
+  async endLease(leaseId: number): Promise<TenantInfo> {
+    const { data } = await api.post<TenantInfo>(`/transactions/leases/${leaseId}/end`);
+    return data;
+  },
 };

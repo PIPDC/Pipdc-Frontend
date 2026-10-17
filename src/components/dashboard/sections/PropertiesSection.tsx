@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Star, MessageSquare, Search } from 'lucide-react';
+import { Plus, Star, MessageSquare, Search, Lock } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { PropertyForm } from '../../forms/PropertyForm';
@@ -225,24 +225,45 @@ export function PropertiesSection() {
                     )}
                     <td className={tdClass}>{formatPrice(p.price, p.currency)}</td>
                     <td className={tdClass}>
-                      <select
-                        value={p.status}
-                        onChange={(e) => handleStatusChange(p, e.target.value as PropertyStatus)}
-                        className={cn(
-                          'rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs font-medium transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40',
-                          `text-${statusTone[p.status] ?? 'neutral'}-700`,
-                        )}
-                      >
-                        {propertyStatusesForListingType(p.listingType).map((s) => (
-                          <option key={s} value={s}>{propertyStatusLabel(s)}</option>
-                        ))}
-                        {/* Keep a status that contradicts the listing type
-                            selectable so it can be corrected rather than
-                            silently vanishing from its own dropdown. */}
-                        {!isStatusValidForListingType(p.status, p.listingType) && (
-                          <option value={p.status}>{propertyStatusLabel(p.status)}</option>
-                        )}
-                      </select>
+                      {p.status === 'Sold' || p.status === 'Rented' ? (
+                        // Sold and Rented are committed states: a sale is final and a
+                        // tenancy is held by the live lease. Neither is changed from
+                        // this dropdown, so it is shown as a locked badge. A rented
+                        // property is freed by ending the tenancy on the Tenants page.
+                        <span
+                          title={
+                            p.status === 'Sold'
+                              ? 'Sold is final and cannot be changed here.'
+                              : 'Tenanted. End the tenancy on the Tenants page to free this property.'
+                          }
+                          className={cn(
+                            'inline-flex cursor-not-allowed items-center gap-1 rounded-lg border border-ink-200 bg-ink-50 px-2 py-1 text-xs font-medium',
+                            `text-${statusTone[p.status] ?? 'neutral'}-700`,
+                          )}
+                        >
+                          {propertyStatusLabel(p.status)}
+                          <Lock className="h-3 w-3" />
+                        </span>
+                      ) : (
+                        <select
+                          value={p.status}
+                          onChange={(e) => handleStatusChange(p, e.target.value as PropertyStatus)}
+                          className={cn(
+                            'rounded-lg border border-ink-200 bg-white px-2 py-1 text-xs font-medium transition-colors hover:border-ink-300 focus:border-forest-500 focus:outline-none focus:ring-1 focus:ring-forest-500/40',
+                            `text-${statusTone[p.status] ?? 'neutral'}-700`,
+                          )}
+                        >
+                          {propertyStatusesForListingType(p.listingType).map((s) => (
+                            <option key={s} value={s}>{propertyStatusLabel(s)}</option>
+                          ))}
+                          {/* Keep a status that contradicts the listing type
+                              selectable so it can be corrected rather than
+                              silently vanishing from its own dropdown. */}
+                          {!isStatusValidForListingType(p.status, p.listingType) && (
+                            <option value={p.status}>{propertyStatusLabel(p.status)}</option>
+                          )}
+                        </select>
+                      )}
                     </td>
                     <td className={tdClass}>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-semibold text-ink-700">
