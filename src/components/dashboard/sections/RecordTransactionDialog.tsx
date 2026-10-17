@@ -21,6 +21,34 @@ export interface RecordedTransaction {
   counterpartyName: string;
 }
 
+/**
+ * Common tenancy lengths offered alongside a custom end date. Selecting one sets
+ * the lease end from the start date; the exact term is re-derived by the backend
+ * from the two dates, so this list only exists to save typing.
+ */
+const leaseTermOptions = [
+  { value: "1", label: "1 month" },
+  { value: "2", label: "2 months" },
+  { value: "3", label: "3 months" },
+  { value: "6", label: "6 months" },
+  { value: "7", label: "7 months" },
+  { value: "12", label: "1 year (12 months)" },
+  { value: "24", label: "2 years (24 months)" },
+  { value: "custom", label: "Custom end date" },
+];
+
+/** Adds whole calendar months to a yyyy-mm-dd date without tripping over time zones. */
+function addMonths(isoDate: string, months: number): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) return "";
+  const base = new Date(year, month - 1, day);
+  base.setMonth(base.getMonth() + months);
+  const y = base.getFullYear();
+  const m = String(base.getMonth() + 1).padStart(2, "0");
+  const d = String(base.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function RecordTransactionDialog({
   property,
   outcome,
@@ -38,6 +66,7 @@ export function RecordTransactionDialog({
     new Date().toISOString().slice(0, 10),
   );
   const [monthlyRent, setMonthlyRent] = useState("");
+  const [leaseTerm, setLeaseTerm] = useState("12");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -106,9 +135,16 @@ export function RecordTransactionDialog({
       propertyPrice != null && propertyPrice > 0 ? String(propertyPrice) : "",
     );
     setSaleDate(new Date().toISOString().slice(0, 10));
-    setMonthlyRent("");
-    setStartDate(new Date().toISOString().slice(0, 10));
-    setEndDate("");
+    // A rental listing's price is its annual rent, so the monthly figure the
+    // tenancy is recorded at starts as one twelfth of it. It stays editable for
+    // when the agreed rent differs from the asking price.
+    setMonthlyRent(
+      propertyPrice != null && propertyPrice > 0 ? String(Math.round(propertyPrice / 12)) : "",
+    );
+    const today = new Date().toISOString().slice(0, 10);
+    setLeaseTerm("12");
+    setStartDate(today);
+    setEndDate(addMonths(today, 12));
   }, [propertyId, propertyPrice, outcome]);
 
   const counterpartyName = selectedCandidate?.fullName ?? manualName;
@@ -285,21 +321,44 @@ export function RecordTransactionDialog({
               min="0"
               value={monthlyRent}
               onChange={(event) => setMonthlyRent(event.target.value)}
+              hint="Auto-filled from the annual rent (÷ 12). Edit if the agreed rent differs."
               required
             />
+            <Select
+              label="Lease term"
+              value={leaseTerm}
+              onChange={(event) => {
+                const term = event.target.value;
+                setLeaseTerm(term);
+                if (term !== "custom" && startDate) setEndDate(addMonths(startDate, Number(term)));
+              }}
+            >
+              {leaseTermOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
                 label="Lease starts"
                 type="date"
                 value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setStartDate(next);
+                  if (leaseTerm !== "custom" && next) setEndDate(addMonths(next, Number(leaseTerm)));
+                }}
                 required
               />
               <Input
                 label="Lease ends"
                 type="date"
                 value={endDate}
-                onChange={(event) => setEndDate(event.target.value)}
+                onChange={(event) => {
+                  setEndDate(event.target.value);
+                  setLeaseTerm("custom");
+                }}
                 required
               />
             </div>

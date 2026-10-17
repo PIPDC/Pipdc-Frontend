@@ -165,27 +165,29 @@ const router = createBrowserRouter([
         ),
       },
       {
+        // Admins see every transaction; an agent sees the ones tied to their own
+        // listings, so both roles may open this. The API does the scoping.
         path: 'statistics',
         element: (
-          <AdminGuard>
+          <StaffGuard>
             <DashboardSectionPage section="statistics" />
-          </AdminGuard>
+          </StaffGuard>
         ),
       },
       {
         path: 'tenants',
         element: (
-          <AdminGuard>
+          <StaffGuard>
             <DashboardSectionPage section="tenants" />
-          </AdminGuard>
+          </StaffGuard>
         ),
       },
       {
         path: 'purchasers',
         element: (
-          <AdminGuard>
+          <StaffGuard>
             <DashboardSectionPage section="purchasers" />
-          </AdminGuard>
+          </StaffGuard>
         ),
       },
       {

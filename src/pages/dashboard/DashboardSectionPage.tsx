@@ -89,6 +89,9 @@ const config: Record<DashboardSection, { title: string; description: string }> =
 const agentDescriptions: Partial<Record<DashboardSection, string>> = {
   properties: 'Manage your listings on the PIPDC portal.',
   enquiries: 'Review and respond to enquiries on your properties.',
+  statistics: 'Sales and rentals on your properties, and how your enquiries convert.',
+  tenants: 'Tenants renting your properties, with reminders before their lease expires.',
+  purchasers: 'Clients who have bought a property through you.',
 };
 
 const sectionIcons: Record<DashboardSection, React.ReactNode> = {
