@@ -63,6 +63,18 @@ export const transactionService = {
     return data;
   },
 
+  /** The signed-in client's own tenancies, past and present. */
+  async myTenancies(): Promise<TenantInfo[]> {
+    const { data } = await api.get<TenantInfo[]>('/transactions/my/tenancies');
+    return data;
+  },
+
+  /** The signed-in client's own property purchases. */
+  async myPurchases(): Promise<PurchaserInfo[]> {
+    const { data } = await api.get<PurchaserInfo[]>('/transactions/my/purchases');
+    return data;
+  },
+
   /** Admin-only. Emails a tenant the time left on their lease. */
   async notifyTenant(leaseId: number, idempotencyKey: string): Promise<NotifyTenantResult> {
     const { data } = await api.post<NotifyTenantResult>(

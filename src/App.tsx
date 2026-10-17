@@ -191,6 +191,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: 'my-tenancies',
+        element: <DashboardSectionPage section="my-tenancies" />,
+      },
+      {
+        path: 'my-purchases',
+        element: <DashboardSectionPage section="my-purchases" />,
+      },
+      {
         path: 'escalations',
         element: (
           <AdminGuard>

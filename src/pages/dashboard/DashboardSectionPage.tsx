@@ -24,6 +24,8 @@ import { ConciergeEscalationsSection } from '../../components/dashboard/sections
 import { MyReportsSection } from '../../components/dashboard/sections/MyReportsSection';
 import { TenantInfoSection } from '../../components/dashboard/sections/TenantInfoSection';
 import { PurchasersSection } from '../../components/dashboard/sections/PurchasersSection';
+import { MyPurchasesSection } from '../../components/dashboard/sections/MyPurchasesSection';
+import { MyTenanciesSection } from '../../components/dashboard/sections/MyTenanciesSection';
 
 export type DashboardSection =
   | 'properties'
@@ -45,6 +47,8 @@ export type DashboardSection =
   | 'statistics'
   | 'tenants'
   | 'purchasers'
+  | 'my-tenancies'
+  | 'my-purchases'
   | 'escalations'
   | 'concierge-escalations'
   | 'locations';
@@ -76,6 +80,14 @@ const config: Record<DashboardSection, { title: string; description: string }> =
   statistics: { title: 'Statistics', description: 'Recorded sales and rentals, and how enquiries convert into deals.' },
   tenants: { title: 'Tenants', description: 'Clients currently renting, with reminders before their lease expires.' },
   purchasers: { title: 'Purchasers', description: 'Clients who have bought a property through PIPDC.' },
+  'my-tenancies': {
+    title: 'My Rentals',
+    description: 'Properties you rent, with the lease term and when each one ends.',
+  },
+  'my-purchases': {
+    title: 'My Purchases',
+    description: 'Properties you have bought through PIPDC.',
+  },
   escalations: {
     title: 'Escalations',
     description: 'Conversations escalated to an administrator by the concierge.',
@@ -115,6 +127,8 @@ const sectionIcons: Record<DashboardSection, React.ReactNode> = {
   statistics: <BarChart3 className="h-5 w-5" />,
   tenants: <KeyRound className="h-5 w-5" />,
   purchasers: <Handshake className="h-5 w-5" />,
+  'my-tenancies': <KeyRound className="h-5 w-5" />,
+  'my-purchases': <Handshake className="h-5 w-5" />,
   escalations: <ShieldAlert className="h-5 w-5" />,
   'concierge-escalations': <Bot className="h-5 w-5" />,
 };
@@ -155,6 +169,8 @@ export function DashboardSectionPage({ section }: { section: DashboardSection })
       {section === 'statistics' && <AdminOperationsSection />}
       {section === 'tenants' && <TenantInfoSection />}
       {section === 'purchasers' && <PurchasersSection />}
+      {section === 'my-tenancies' && <MyTenanciesSection />}
+      {section === 'my-purchases' && <MyPurchasesSection />}
       {section === 'escalations' && <EscalationsSection />}
       {section === 'concierge-escalations' && <ConciergeEscalationsSection />}
     </div>

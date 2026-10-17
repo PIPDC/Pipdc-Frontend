@@ -12,6 +12,8 @@ const transactionKeys = {
   analytics: (from?: string, to?: string) => [...TRANSACTIONS_KEY, 'analytics', { from, to }] as const,
   tenants: () => [...TRANSACTIONS_KEY, 'tenants'] as const,
   purchasers: () => [...TRANSACTIONS_KEY, 'purchasers'] as const,
+  myTenancies: () => [...TRANSACTIONS_KEY, 'my-tenancies'] as const,
+  myPurchases: () => [...TRANSACTIONS_KEY, 'my-purchases'] as const,
 };
 
 export function useTransactions(filters?: TransactionFilters) {
@@ -52,6 +54,22 @@ export function usePurchasers() {
   return useQuery({
     queryKey: transactionKeys.purchasers(),
     queryFn: () => transactionService.purchasers(),
+  });
+}
+
+/** The signed-in client's own tenancies. Scoped to the caller on the server. */
+export function useMyTenancies() {
+  return useQuery({
+    queryKey: transactionKeys.myTenancies(),
+    queryFn: () => transactionService.myTenancies(),
+  });
+}
+
+/** The signed-in client's own purchases. Scoped to the caller on the server. */
+export function useMyPurchases() {
+  return useQuery({
+    queryKey: transactionKeys.myPurchases(),
+    queryFn: () => transactionService.myPurchases(),
   });
 }
 
