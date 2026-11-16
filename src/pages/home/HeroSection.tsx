@@ -43,7 +43,7 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur-md"
           >
-            <ShieldCheck className="h-4 w-4 text-gold-400" /> Official Plateau State Property Portal
+            <ShieldCheck className="h-4 w-4 text-gold-400" /> Portfolio Demo Project
           </motion.span>
 
           <motion.h1
@@ -61,8 +61,8 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-5 max-w-xl text-lg text-white/85"
           >
-            Buy, sell, rent and invest with confidence. Verified listings, trusted agents and government-backed
-            documentation across the Plateau.
+            A real-estate platform demo: browse listings, compare properties and connect with agents. All data on
+            this site is sample data.
           </motion.p>
 
           <motion.div
@@ -99,7 +99,7 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
                   </span>
                 ))}
               </div>
-              <span>320+ verified agents</span>
+              <span>Demo agents</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
@@ -107,7 +107,7 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
               <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
               <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
               <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <span className="ml-1">4.9/5 client rating</span>
+              <span className="ml-1">Sample ratings</span>
             </div>
           </motion.div>
         </div>
