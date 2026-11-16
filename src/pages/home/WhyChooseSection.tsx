@@ -11,7 +11,7 @@ const features = [
   {
     icon: Users,
     title: 'Trusted Agents',
-    description: 'Work with vetted, government-backed agents committed to transparent dealings.',
+    description: 'Work with vetted agents committed to transparent dealings.',
   },
   {
     icon: Lock,
@@ -20,8 +20,8 @@ const features = [
   },
   {
     icon: Landmark,
-    title: 'Government Backing',
-    description: 'The official property company of Plateau State, accountable to citizens.',
+    title: 'Clear Documentation',
+    description: 'Every step from enquiry to handover is recorded and tracked on the platform.',
   },
   {
     icon: Headphones,
@@ -72,9 +72,9 @@ export function WhyChooseSection() {
                 property partner.
               </p>
               <div className="mt-5 grid grid-cols-3 gap-3">
-                <Stat value="15K+" label="Clients" />
-                <Stat value="1.2K+" label="Listings" />
-                <Stat value="98%" label="Satisfaction" />
+                <Stat value="24/7" label="Online access" />
+                <Stat value="Live" label="Real-time updates" />
+                <Stat value="AI" label="Concierge" />
               </div>
             </div>
           </motion.div>
