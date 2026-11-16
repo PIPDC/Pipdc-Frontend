@@ -13,10 +13,10 @@ export function PublicLayout() {
       <Footer />
       <div
         role="note"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 bg-ink-900/90 px-4 py-2 text-center text-xs font-medium text-white backdrop-blur"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 bg-ink-900/90 py-2 pl-4 pr-44 text-left text-[11px] font-medium leading-snug text-white backdrop-blur sm:px-4 sm:text-center sm:text-xs"
       >
-        Portfolio demo project by Simon Agboji · Not affiliated with the Plateau State Government or the Plateau State
-        Property Investment &amp; Development Company · All listings, agents and figures are sample data.
+        Portfolio demo by Simon Agboji · Not affiliated with the Plateau State Government or the real PIPDC · All
+        data is sample data.
       </div>
       <AiConciergeDrawer />
       <ScrollRestoration />
