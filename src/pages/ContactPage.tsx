@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Phone, Mail, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
+import { Mail, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { PropertyMap } from '../components/PropertyMap';
@@ -28,10 +28,9 @@ const schema = z.object({
 type ContactForm = z.infer<typeof schema>;
 
 const contactInfo = [
-  { icon: MapPin, label: 'Visit us', value: '12 Secretariat Road, Jos, Plateau State', href: '#' },
-  { icon: Phone, label: 'Call us', value: '+234 803 555 0100', href: 'tel:+2348035550100' },
-  { icon: Mail, label: 'Email us', value: 'info@pipdc.gov.ng', href: 'mailto:info@pipdc.gov.ng' },
-  { icon: Clock, label: 'Office hours', value: 'Mon – Fri, 8:00 – 17:00' },
+  { icon: MapPin, label: 'Location', value: 'Jos, Plateau State (portfolio demo)', href: '#' },
+  { icon: Mail, label: 'Email', value: 'demo@example.com', href: 'mailto:demo@example.com' },
+  { icon: Clock, label: 'Demo note', value: 'Sample data only' },
 ];
 
 export function ContactPage() {
@@ -57,7 +56,7 @@ export function ContactPage() {
       notify({
         type: 'success',
         title: 'Message sent',
-        description: 'Our team will respond within one business day.',
+        description: 'Thanks — your message was submitted to the demo backend.',
       });
       reset();
     } catch (err) {
@@ -73,9 +72,9 @@ export function ContactPage() {
         <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Contact' }]} />
         <SectionHeading
           align="left"
-          eyebrow="Contact PIPDC"
-          title="We are here to help"
-          description="Reach our advisory team for questions about listings, documentation, partnerships or general enquiries."
+          eyebrow="Contact"
+          title="Get in touch with the demo"
+          description="Use this form to test the enquiry flow. This is a portfolio demo with sample data only."
         />
       </div>
 
@@ -144,9 +143,9 @@ export function ContactPage() {
             </div>
 
             <div className="relative mt-4">
-              <PropertyMap address="12 Secretariat Road, Jos, Plateau State, Nigeria" title="PIPDC HQ, Jos" />
+              <PropertyMap address="Jos, Plateau State, Nigeria" title="Plateau State (demo)" />
               <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-ink-700 backdrop-blur-sm">
-                PIPDC HQ, Jos
+                Plateau State (demo)
               </div>
             </div>
 
@@ -156,7 +155,7 @@ export function ContactPage() {
                 <h3 className="font-display text-base font-semibold">Need a quick answer?</h3>
               </div>
               <p className="mt-2 text-sm text-white/85">
-                Call our advisory line on weekdays from 8:00 to 17:00 for immediate assistance.
+                Try the built-in AI concierge for sample listings, locations and budgets.
               </p>
             </div>
           </motion.aside>

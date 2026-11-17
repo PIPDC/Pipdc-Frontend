@@ -55,8 +55,8 @@ export function HomePage() {
             <SectionHeading
               align="left"
               eyebrow="Featured Listings"
-              title="Handpicked properties from across the Plateau"
-              description="A curated selection of verified, premium homes and investments."
+              title="Featured properties from across the Plateau"
+              description="A selection of sample listings and investment opportunities."
             />
             <Link to="/properties" className="hidden sm:block">
               <Button variant="outline" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
@@ -111,7 +111,7 @@ export function HomePage() {
           <SectionHeading
             eyebrow="Meet the Team"
             title="Verified agents you can trust"
-            description="Our agents are vetted, trained and accountable to PIPDC standards."
+            description="Agent profiles include listings, contact options and client reviews."
           />
           {agentsQuery.isLoading ? (
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -139,7 +139,7 @@ export function HomePage() {
           <SectionHeading
             eyebrow="Just Listed"
             title="The latest properties on the market"
-            description="Fresh, verified listings added by PIPDC agents across Plateau State."
+            description="Sample listings from the demo data set."
           />
           {latestQuery.isLoading ? (
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -172,7 +172,7 @@ export function HomePage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <SectionHeading
               eyebrow="Insights"
-              title="Guidance from the PIPDC advisory team"
+              title="Guidance for buyers, sellers and investors"
               description="Practical, plain-language guidance for buyers, sellers and investors."
             />
             <Link
@@ -219,7 +219,7 @@ export function HomePage() {
                     </Link>
                     <p className="mt-2 text-sm text-ink-500 line-clamp-2">{post.excerpt}</p>
                     <div className="mt-4 flex items-center justify-between border-t border-ink-100 pt-4 text-xs text-ink-400">
-                      <span>PIPDC Advisory</span>
+                      <span>PIPDC Demo</span>
                       <span>{post.publishedAt ? formatDate(post.publishedAt) : formatDate(post.createdAt)}</span>
                     </div>
                   </div>

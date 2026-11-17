@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { useCountUp } from '../../hooks/useCountUp';
+import { Building2, Users, Sparkles, MessageSquare, type LucideIcon } from 'lucide-react';
 
-const stats = [
-  { value: 1200, suffix: '+', label: 'Verified Listings' },
-  { value: 320, suffix: '+', label: 'Trusted Agents' },
-  { value: 15000, suffix: '+', label: 'Happy Clients' },
-  { value: 25, suffix: '', label: 'Years of Service' },
+const highlights = [
+  { icon: Building2, label: 'Property listings' },
+  { icon: Users, label: 'Agent profiles' },
+  { icon: Sparkles, label: 'AI concierge' },
+  { icon: MessageSquare, label: 'Real-time enquiries' },
 ];
 
 export function StatsSection() {
@@ -14,8 +14,8 @@ export function StatsSection() {
       <div className="absolute inset-0 bg-grid opacity-[0.05]" aria-hidden="true" />
       <div className="container-x relative">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s, idx) => (
-            <StatCard key={s.label} {...s} index={idx} />
+          {highlights.map((h, idx) => (
+            <HighlightCard key={h.label} {...h} index={idx} />
           ))}
         </div>
       </div>
@@ -23,8 +23,7 @@ export function StatsSection() {
   );
 }
 
-function StatCard({ value, suffix, label, index }: { value: number; suffix: string; label: string; index: number }) {
-  const count = useCountUp(value, 1800, true);
+function HighlightCard({ icon: Icon, label, index }: { icon: LucideIcon; label: string; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -33,10 +32,10 @@ function StatCard({ value, suffix, label, index }: { value: number; suffix: stri
       transition={{ duration: 0.5, delay: index * 0.08 }}
       className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm"
     >
-      <p className="font-display text-4xl font-bold text-gold-400">
-        {count.toLocaleString()}{suffix}
-      </p>
-      <p className="mt-2 text-sm text-white/70">{label}</p>
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-gold-400">
+        <Icon className="h-6 w-6" />
+      </span>
+      <p className="mt-3 font-display text-lg font-semibold text-white">{label}</p>
     </motion.div>
   );
 }

@@ -28,9 +28,9 @@ export function AgentsPage() {
         <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Agents' }]} />
         <SectionHeading
           align="left"
-          eyebrow="Our People"
-          title="Meet PIPDC's verified agents"
-          description="A team of vetted, accountable professionals ready to guide your next move."
+          eyebrow="Agents"
+          title="Agent profiles in the demo"
+          description="Browse sample profiles with listings, contact options and client reviews."
         />
 
         <div className="mt-8 max-w-md">

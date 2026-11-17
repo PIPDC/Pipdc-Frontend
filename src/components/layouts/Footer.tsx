@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
+import { Mail, MapPin, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -46,8 +46,8 @@ export function Footer() {
           <div className="lg:col-span-4">
             <Logo variant="light" />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink-300">
-              The Plateau State Property Investment &amp; Development Company is the official gateway to verified
-              property transactions across the Plateau. Buy, sell, rent and invest with confidence.
+              A full-stack real-estate portfolio demo by Simon Agboji, built with ASP.NET Core and React.
+              Listings, agents and enquiries are sample data only.
             </p>
             <div className="mt-6 flex items-center gap-3">
               {socials.map((s) => (
@@ -100,7 +100,7 @@ export function Footer() {
           <div className="lg:col-span-4">
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">Stay Informed</h3>
             <p className="mt-4 text-sm text-ink-300">
-              Subscribe to receive verified listings and market insights from PIPDC.
+              Subscribe to sample listing updates from this portfolio demo.
             </p>
             <form
               className="mt-4 flex flex-col gap-2 sm:flex-row"
@@ -119,20 +119,17 @@ export function Footer() {
             </form>
             <ul className="mt-6 space-y-2.5 text-sm text-ink-300">
               <li className="flex items-center gap-2.5">
-                <MapPin className="h-4 w-4 text-gold-400" /> 12 Secretariat Road, Jos, Plateau State
+                <MapPin className="h-4 w-4 text-gold-400" /> Jos, Plateau State (portfolio demo)
               </li>
               <li className="flex items-center gap-2.5">
-                <Phone className="h-4 w-4 text-gold-400" /> +234 803 555 0100
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Mail className="h-4 w-4 text-gold-400" /> info@pipdc.gov.ng
+                <Mail className="h-4 w-4 text-gold-400" /> demo@example.com
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-ink-400 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} Plateau State Property Investment &amp; Development Company. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} PIPDC Real Estate Demo. Portfolio project by Simon Agboji.</p>
           <div className="flex items-center gap-4">
             <Link to="/about" className="inline-block py-1 transition-colors hover:text-gold-400">Privacy</Link>
             <Link to="/about" className="inline-block py-1 transition-colors hover:text-gold-400">Terms</Link>

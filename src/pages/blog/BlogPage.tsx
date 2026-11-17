@@ -13,15 +13,15 @@ export function BlogPage() {
   return (
     <div className="section-pad bg-white">
       <Helmet>
-        <title>Insights & Resources — PIPDC</title>
-        <meta name="description" content="Expert insights on real estate investment, legal guidance, and market trends from the Presidential Interface & Property Development Committee." />
+        <title>Insights &amp; Resources — PIPDC Real Estate Demo</title>
+        <meta name="description" content="Sample insights on real estate investment, legal guidance and market trends from this portfolio demo." />
       </Helmet>
       <div className="container-x">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full bg-forest-50 px-3 py-1 text-xs font-semibold text-forest-700">
             <Newspaper className="h-3.5 w-3.5" /> Insights
           </span>
-          <h1 className="heading-2 mt-4">Guidance from the PIPDC advisory team</h1>
+          <h1 className="heading-2 mt-4">Guidance for buyers, sellers and investors</h1>
           <p className="mt-3 text-ink-500">Practical, plain-language guidance for buyers, sellers and investors.</p>
         </div>
 
@@ -63,7 +63,7 @@ export function BlogPage() {
                   <h2 className="mt-3 font-display text-lg font-semibold leading-snug text-ink-900 line-clamp-2">{post.title}</h2>
                   <p className="mt-2 text-sm text-ink-500 line-clamp-2">{post.excerpt}</p>
                   <div className="mt-4 flex items-center justify-between border-t border-ink-100 pt-4 text-xs text-ink-400">
-                    <span>PIPDC Advisory</span>
+                    <span>PIPDC Demo</span>
                     <span>{post.publishedAt ? formatDate(post.publishedAt) : formatDate(post.createdAt)}</span>
                   </div>
                   <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-forest-600">

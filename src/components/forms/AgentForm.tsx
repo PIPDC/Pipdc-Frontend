@@ -151,7 +151,7 @@ export function AgentForm({ open, agent, onClose }: AgentFormProps) {
               <Input label="Last name" placeholder="e.g. Yusuf" error={errors.lastName?.message} {...register('lastName')} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Email" type="email" placeholder="agent@pipdc.gov.ng" error={errors.email?.message} {...register('email')} />
+              <Input label="Email" type="email" placeholder="agent@example.com" error={errors.email?.message} {...register('email')} />
               <Input label="Temporary password" type="password" placeholder="Min 8 characters" error={errors.password?.message} {...register('password')} />
             </div>
           </>

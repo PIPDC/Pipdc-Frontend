@@ -141,7 +141,7 @@ export function LoginPage() {
 
       <div className="mt-6 flex items-center gap-2 rounded-xl border border-ink-100 bg-ink-50 p-3 text-xs text-ink-500">
         <ShieldCheck className="h-4 w-4 text-forest-500" />
-        Your session is protected with bank-grade encryption.
+        Your session is protected.
       </div>
 
       <p className="mt-8 text-center text-sm text-ink-500">

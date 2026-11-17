@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2, ShieldCheck, Star } from 'lucide-react';
+import { ArrowRight, Building2, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { SearchFilterCard } from '../../components/property/SearchFilter';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,7 +43,7 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider backdrop-blur-md"
           >
-            <ShieldCheck className="h-4 w-4 text-gold-400" /> Portfolio Demo Project
+            <ShieldCheck className="h-4 w-4 text-gold-400" /> Portfolio Real Estate Demo
           </motion.span>
 
           <motion.h1
@@ -99,15 +99,11 @@ export function HeroSection({ filters, onFiltersChange, onSearch }: HeroSectionP
                   </span>
                 ))}
               </div>
-              <span>Demo agents</span>
+              <span>Agent profiles</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
-              <span className="ml-1">Sample ratings</span>
+              <Sparkles className="h-4 w-4 text-gold-400" />
+              <span>AI concierge included</span>
             </div>
           </motion.div>
         </div>

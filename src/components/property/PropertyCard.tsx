@@ -97,7 +97,7 @@ export function PropertyCard({ property, agentName, isFavourite, onToggleFavouri
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest-50 text-xs font-semibold text-forest-700">
               {agentName?.charAt(0) ?? 'P'}
             </div>
-            <span className="truncate text-xs text-ink-500">{agentName ?? 'PIPDC Official'}</span>
+            <span className="truncate text-xs text-ink-500">{agentName ?? 'PIPDC Agent'}</span>
           </div>
           <Link
             to={`/properties/${property.slug}`}

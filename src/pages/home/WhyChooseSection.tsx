@@ -1,32 +1,32 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, Users, Lock, Landmark, Headphones } from 'lucide-react';
+import { ShieldCheck, Users, MessageSquare, LayoutDashboard, Sparkles } from 'lucide-react';
 import { SectionHeading } from '../../components/ui/SectionHeading';
 
 const features = [
   {
     icon: ShieldCheck,
     title: 'Verified Properties',
-    description: 'Every listing is checked for documentation and ownership before it goes live.',
+    description: 'Listings can be marked verified by agents and reviewed by admins.',
   },
   {
     icon: Users,
-    title: 'Trusted Agents',
-    description: 'Work with vetted agents committed to transparent dealings.',
+    title: 'Agent Profiles',
+    description: 'Browse agent profiles with contact options and client reviews.',
   },
   {
-    icon: Lock,
-    title: 'Secure Transactions',
-    description: 'Bank-grade processes protect your payments and personal information.',
+    icon: MessageSquare,
+    title: 'Enquiry Tracking',
+    description: 'Send enquiries and follow their status from the client dashboard.',
   },
   {
-    icon: Landmark,
-    title: 'Clear Documentation',
-    description: 'Every step from enquiry to handover is recorded and tracked on the platform.',
+    icon: LayoutDashboard,
+    title: 'Admin Dashboard',
+    description: 'Manage listings, applications, enquiries and reports in one place.',
   },
   {
-    icon: Headphones,
-    title: 'Fast Support',
-    description: 'Reach our advisory team on weekdays and weekends for prompt assistance.',
+    icon: Sparkles,
+    title: 'AI Concierge',
+    description: 'Ask the built-in assistant for property suggestions by location and budget.',
   },
 ];
 
@@ -35,9 +35,9 @@ export function WhyChooseSection() {
     <section className="section-pad bg-white">
       <div className="container-x">
         <SectionHeading
-          eyebrow="Why PIPDC"
-          title="The trusted standard for property on the Plateau"
-          description="From documentation to handover, we hold every transaction to a higher standard."
+          eyebrow="Platform Features"
+          title="What the demo covers"
+          description="A walkthrough of the main features in this portfolio project."
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f, idx) => (
@@ -66,29 +66,14 @@ export function WhyChooseSection() {
           >
             <div className="absolute inset-0 bg-grid opacity-[0.08]" aria-hidden="true" />
             <div className="relative">
-              <h3 className="font-display text-lg font-semibold">A partner for every step</h3>
+              <h3 className="font-display text-lg font-semibold">Explore the full flow</h3>
               <p className="mt-2 text-sm text-white/85">
-                Whether you are buying your first home or expanding an investment portfolio, PIPDC is your long-term
-                property partner.
+                Browse listings, contact agents, track enquiries and manage everything from the admin dashboard.
               </p>
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                <Stat value="24/7" label="Online access" />
-                <Stat value="Live" label="Real-time updates" />
-                <Stat value="AI" label="Concierge" />
-              </div>
             </div>
           </motion.div>
         </div>
       </div>
     </section>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-      <p className="font-display text-xl font-bold text-gold-400">{value}</p>
-      <p className="mt-0.5 text-[11px] text-white/70">{label}</p>
-    </div>
   );
 }

@@ -289,7 +289,7 @@ export function ApplyAgentPage() {
         <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Apply as an agent' }]} />
         <SectionHeading
           title="Apply to become a PIPDC agent"
-          description="List your properties on the Plateau Internal Development Commission portal and reach verified clients."
+          description="Explore the agent application flow in this PIPDC real-estate demo."
         />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
@@ -499,7 +499,7 @@ export function ApplyAgentPage() {
             <div className="rounded-2xl bg-forest-gradient p-6 text-white shadow-lift">
               <h3 className="font-display text-base font-semibold">Why apply through PIPDC?</h3>
               <ul className="mt-3 space-y-2 text-sm text-white/90">
-                <li>Reach clients searching the official Plateau property register.</li>
+                <li>Explore how clients discover listings in the demo.</li>
                 <li>A unique licence number that identifies your agency on every listing.</li>
                 <li>Enquiries and client messages delivered to your dashboard.</li>
               </ul>

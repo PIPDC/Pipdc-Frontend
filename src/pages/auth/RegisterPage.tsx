@@ -81,7 +81,7 @@ export function RegisterPage() {
     <div>
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-ink-900">Create your PIPDC account</h1>
-        <p className="mt-2 text-sm text-ink-500">Join the official Plateau State property platform.</p>
+        <p className="mt-2 text-sm text-ink-500">Join the PIPDC real-estate demo platform.</p>
       </div>
 
       {serverError && (
@@ -133,7 +133,7 @@ export function RegisterPage() {
       </form>
 
       <ul className="mt-6 space-y-2 text-sm text-ink-500">
-        {['Verified listings across Plateau State', 'Direct access to PIPDC agents', 'Save favourites and track enquiries'].map((b) => (
+        {['Sample listings across Plateau State', 'Agent profiles and messaging', 'Save favourites and track enquiries'].map((b) => (
           <li key={b} className="flex items-center gap-2">
             <Check className="h-4 w-4 text-forest-500" /> {b}
           </li>
